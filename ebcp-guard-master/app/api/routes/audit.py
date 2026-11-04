@@ -1,17 +1,25 @@
 """Audit verification endpoint."""
 from datetime import datetime, timezone
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from app.api.schemas.schemas import VerifyAuditRequest, VerifyAuditResponse
+from app.core.auth import ServiceIdentity, require_service, require_tenant
 from app.cryptography.audit_integrity import verify_chain, build_merkle_tree, GENESIS_HASH
+from app.cryptography.key_manager import get_key_manager
+from app.services.audit_service import checkpoint_failure
 
 router = APIRouter()
 
 @router.post("/verify-audit", response_model=VerifyAuditResponse)
-async def verify_audit(request: VerifyAuditRequest) -> VerifyAuditResponse:
+async def verify_audit(
+    request: VerifyAuditRequest,
+    service: ServiceIdentity = Depends(require_service),
+) -> VerifyAuditResponse:
     """
     Verify the integrity of the audit hash chain using PostgreSQL records.
     Detects any tampering with audit events.
     """
+    require_tenant(service, request.tenant_id)
+
     from app.database.models import AuditEvent
     from tortoise.expressions import Q
 
@@ -28,7 +36,14 @@ async def verify_audit(request: VerifyAuditRequest) -> VerifyAuditResponse:
         "safe_metadata", "sequence_number"
     )
 
-    is_valid, failed_seq, failed_id = verify_chain(events, GENESIS_HASH)
+    audit_key = get_key_manager().derive_audit_key(request.tenant_id)
+    is_valid, failed_seq, failed_id = verify_chain(events, GENESIS_HASH, audit_key)
+
+    # A full-chain check must also still reach the last event recorded outside the database.
+    is_full_chain = request.batch_id is None and request.start_sequence is None and request.end_sequence is None
+    if is_valid and is_full_chain:
+        failed_seq = checkpoint_failure(request.tenant_id, events)
+        is_valid = failed_seq is None
 
     event_hashes = [e["current_hash"] for e in events]
     merkle_root = None

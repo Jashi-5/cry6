@@ -12,10 +12,16 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from pydantic import Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+class ServiceApiKey(BaseModel):
+    """One calling service. Only the SHA-256 of its key is kept in configuration."""
+    key_sha256: str
+    tenants: list[str]  # tenant ids this service may act for; ["*"] means all
 
 
 class Settings(BaseSettings):
@@ -99,6 +105,10 @@ class Settings(BaseSettings):
     # Security
     # ------------------------------------------------------------------ #
     authorized_decrypt_services: list[str] = ["payment_service", "fraud_service"]
+    # Last audit event per tenant, kept outside the database to reveal deleted events.
+    audit_checkpoint_path: str = str(BASE_DIR / "audit_checkpoint.json")
+    # service id -> key hash and tenants. Empty means every keyed endpoint refuses all callers.
+    service_api_keys: dict[str, ServiceApiKey] = {}
 
     # ------------------------------------------------------------------ #
     # Risk Scoring Weights
@@ -128,6 +138,21 @@ class Settings(BaseSettings):
         except ValueError:
             raise ValueError("Cryptographic key must be a valid hexadecimal string")
         return v
+
+    @model_validator(mode="after")
+    def refuse_placeholder_keys_outside_development(self) -> "Settings":
+        """The default and .env.example keys are public, so they protect nothing."""
+        if self.app_env != "development":
+            weak = [
+                name for name in ("master_key_hex", "hmac_master_key_hex", "aes_master_key_hex", "audit_hmac_key_hex")
+                if len(set(getattr(self, name).lower())) == 1
+            ]
+            if weak:
+                raise ValueError(
+                    f"APP_ENV={self.app_env} cannot use placeholder keys: {', '.join(weak)}. "
+                    "Generate each with: python -c \"import secrets; print(secrets.token_hex(32))\""
+                )
+        return self
 
     def get_master_key_bytes(self) -> bytes:
         """Return master key as raw bytes."""

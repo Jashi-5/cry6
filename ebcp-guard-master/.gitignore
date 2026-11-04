@@ -18,11 +18,18 @@ venv.bak/
 .env.*.local
 !.env.example
 
+# Audit checkpoint (per-deployment state)
+audit_checkpoint.json
+
 # Databases
 *.db
+*.db-shm
+*.db-wal
 *.sqlite
 *.sqlite3
 ebcp_guard.db
+ebcp_guard.db-shm
+ebcp_guard.db-wal
 ebcp_guard_test.db
 
 # Testing & Coverage

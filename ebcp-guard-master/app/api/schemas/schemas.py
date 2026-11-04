@@ -177,7 +177,10 @@ class ProtectResponse(BaseModel):
 class DecryptRequest(BaseModel):
     cipher_id: str = Field(description="Cipher ID from encryption metadata")
     ciphertext_b64: str = Field(description="Base64-encoded ciphertext+nonce+tag")
-    requesting_service: str = Field(description="Authorized service identity")
+    requesting_service: str | None = Field(
+        default=None,
+        description="Optional and never trusted: identity comes from X-API-Key. A mismatch is refused.",
+    )
     tenant_id: str = Field(default="default", max_length=128)
     justification: str = Field(
         default="",

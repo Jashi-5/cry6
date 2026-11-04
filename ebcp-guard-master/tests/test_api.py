@@ -48,7 +48,7 @@ async def test_tokenize_endpoint():
             "tenant_id": "bank_test",
             "purpose": "ANALYTICS"
         }
-        response = await client.post("/api/v1/tokenize", json=req_body)
+        response = await client.post("/api/v1/tokenize", json=req_body, headers={"X-API-Key": "test-payment-key"})
         assert response.status_code == 200
         data = response.json()
         assert "tokens" in data

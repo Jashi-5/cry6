@@ -8,6 +8,7 @@ Coordinates between the policy engine, masking, tokenization, and encryption.
 from __future__ import annotations
 
 import copy
+import json
 import time
 import uuid
 from typing import Any
@@ -134,19 +135,47 @@ def _apply_protection_to_payload(
     return results
 
 
+def _replace_value(node: Any, original: str, replacement: str) -> Any:
+    """Return node with original replaced in every string, number and object key."""
+    if isinstance(node, str):
+        return node.replace(original, replacement)
+    if isinstance(node, bool) or node is None:
+        return node
+    if isinstance(node, (int, float)):
+        text = str(node)
+        return text.replace(original, replacement) if original in text else node
+    if isinstance(node, list):
+        return [_replace_value(item, original, replacement) for item in node]
+    if isinstance(node, dict):
+        return {
+            _replace_value(key, original, replacement): _replace_value(val, original, replacement)
+            for key, val in node.items()
+        }
+    return node
+
+
 def _replace_in_payload(payload: dict[str, Any], original: str, replacement: str) -> None:
-    """Replace occurrences of original string value in all payload fields."""
-    for key, val in payload.items():
-        if isinstance(val, str) and original in val:
-            payload[key] = val.replace(original, replacement)
-        elif isinstance(val, dict):
-            _replace_in_payload(val, original, replacement)
-        elif isinstance(val, list):
-            for i, item in enumerate(val):
-                if isinstance(item, str) and original in item:
-                    payload[key][i] = item.replace(original, replacement)
-                elif isinstance(item, dict):
-                    _replace_in_payload(item, original, replacement)
+    """Replace original everywhere in the payload, in place."""
+    replaced = _replace_value(payload, original, replacement)
+    payload.clear()
+    payload.update(replaced)
+
+
+def _has_unprotected_value(
+    payload: dict[str, Any],
+    raw_entities: list[dict[str, Any]],
+    policy_decision: PolicyDecision,
+) -> bool:
+    """True if a detected value the policy did not ALLOW is still in the output."""
+    allowed = {
+        d.entity_type for d in policy_decision.entity_decisions
+        if d.action == ProtectionAction.ALLOW
+    }
+    text = json.dumps(payload, ensure_ascii=False, default=str)
+    return any(
+        e.get("value") and e["entity_type"] not in allowed and e["value"] in text
+        for e in raw_entities
+    )
 
 
 async def run_protection(request: ProtectRequest) -> ProtectResponse:
@@ -245,6 +274,12 @@ async def run_protection(request: ProtectRequest) -> ProtectResponse:
             tenant_id=request.tenant_id,
             purpose=purpose,
         )
+        # Fail closed: never return a payload that still holds a detected value.
+        if _has_unprotected_value(protected_payload, raw_entities, policy_decision):
+            logger.error("protection_incomplete_payload_withheld", request_id=request_id)
+            policy_decision.overall_action = ProtectionAction.BLOCK
+            protected_payload = {}
+            entity_results = []
 
     # Record exposure event
     if entity_types:

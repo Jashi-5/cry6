@@ -41,7 +41,8 @@ def _flatten_payload(payload: dict[str, Any], prefix: str = "") -> str:
     """Flatten a nested JSON payload to a text string for NLP processing."""
     parts = []
     for key, val in payload.items():
-        full_key = f"{prefix}.{key}" if prefix else key
+        # "/" not ".": a dot lets the email pattern absorb the key path into the matched value.
+        full_key = f"{prefix}/{key}" if prefix else key
         if isinstance(val, dict):
             parts.append(_flatten_payload(val, full_key))
         elif isinstance(val, list):

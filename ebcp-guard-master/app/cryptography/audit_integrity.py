@@ -35,6 +35,7 @@ SECURITY NOTE:
 from __future__ import annotations
 
 import hashlib
+import hmac
 import json
 import math
 from datetime import datetime, timezone
@@ -55,10 +56,14 @@ def _canonical_json(data: dict[str, Any]) -> bytes:
 def compute_event_hash(
     previous_hash: str,
     event_data: dict[str, Any],
+    key: bytes | None = None,
 ) -> str:
     """
     Compute the chain hash for a single audit event:
-    H_i = SHA256( H_{i-1} || canonical_event_i )
+    H_i = HMAC-SHA256( key, H_{i-1} || canonical_event_i )
+
+    Stored audit events must always pass key: without it the hash is plain SHA-256,
+    which anyone with database access can recompute after changing history.
 
     Args:
         previous_hash: Hex-encoded hash of the preceding event (or GENESIS_HASH).
@@ -70,12 +75,15 @@ def compute_event_hash(
     previous_bytes = bytes.fromhex(previous_hash)
     event_bytes = _canonical_json(event_data)
     combined = previous_bytes + event_bytes
+    if key is not None:
+        return hmac.new(key, combined, hashlib.sha256).hexdigest()
     return hashlib.sha256(combined).hexdigest()
 
 
 def verify_chain(
     events: list[dict[str, Any]],
     genesis_hash: str = GENESIS_HASH,
+    key: bytes | None = None,
 ) -> tuple[bool, int | None, str | None]:
     """
     Verify the integrity of an ordered sequence of audit events.
@@ -89,6 +97,7 @@ def verify_chain(
     Args:
         events:       Ordered list of audit event dicts (ascending sequence).
         genesis_hash: Expected hash for the very first event's previous_hash.
+        key:          HMAC key the chain was written with.
 
     Returns:
         Tuple of (is_valid, first_failed_sequence, first_failed_event_id).
@@ -111,8 +120,8 @@ def verify_chain(
             return False, seq, event_id
 
         # Recompute current hash from stored data
-        recomputed = compute_event_hash(stored_prev, metadata)
-        if recomputed != stored_current:
+        recomputed = compute_event_hash(stored_prev, metadata, key)
+        if not hmac.compare_digest(recomputed, stored_current):
             return False, seq, event_id
 
         expected_prev = stored_current

@@ -438,13 +438,16 @@ class CumulativeExposureEngine:
         }
 
     def get_exposure_history(
-        self, customer_id: str, limit: int = 50
+        self, customer_id: str, limit: int = 50, tenant_filter: Any = None
     ) -> list[dict[str, Any]]:
         """
         Return a safe summary of the exposure history for a synthetic customer.
         No original values — only entity types, actions, and timestamps.
+        tenant_filter: optional predicate limiting which tenants' events are returned.
         """
         events = self._event_store.get(customer_id, [])
+        if tenant_filter:
+            events = [e for e in events if tenant_filter(e.tenant_id)]
         recent = sorted(events, key=lambda e: e.occurred_at, reverse=True)[:limit]
         return [
             {

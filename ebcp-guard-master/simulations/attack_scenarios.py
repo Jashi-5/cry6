@@ -13,13 +13,29 @@ import hmac as hmac_lib
 import random
 import string
 import uuid
-from typing import Any
+from typing import Any, Callable
 
 from app.api.schemas.schemas import AttackSimulationRequest, AttackSimulationResponse
 
 
+# Called as progress(stage, message) after each real step of a scenario.
+# Stages: target_analysis, attack_execution, security_verification.
+Progress = Callable[[str, str], None]
+
+
+def _no_progress(stage: str, message: str) -> None:
+    pass
+
+
 async def run_attack_scenario(request: AttackSimulationRequest) -> AttackSimulationResponse:
-    """Dispatch to the appropriate scenario handler."""
+    """Run a scenario and return only its final result."""
+    return execute_attack_scenario(request)
+
+
+def execute_attack_scenario(
+    request: AttackSimulationRequest, progress: Progress = _no_progress
+) -> AttackSimulationResponse:
+    """Dispatch to the appropriate scenario handler, reporting each step to `progress`."""
     handlers = {
         "plaintext_log": attack_1_plaintext_log,
         "dict_attack": attack_2_dict_attack,
@@ -40,14 +56,14 @@ async def run_attack_scenario(request: AttackSimulationRequest) -> AttackSimulat
             details={"error": f"Unknown scenario: {request.scenario}"},
             explanation="Scenario not found.",
         )
-    return handler(request)
+    return handler(request, progress)
 
 
 # ------------------------------------------------------------------ #
 # Attack 1: Plaintext Log Extraction
 # ------------------------------------------------------------------ #
 
-def attack_1_plaintext_log(req: AttackSimulationRequest) -> AttackSimulationResponse:
+def attack_1_plaintext_log(req: AttackSimulationRequest, progress: Progress = _no_progress) -> AttackSimulationResponse:
     """
     Simulate an attacker reading application logs to extract PII.
     Baseline: logs contain raw PII.
@@ -63,6 +79,7 @@ def attack_1_plaintext_log(req: AttackSimulationRequest) -> AttackSimulationResp
         f"(email: {synthetic_email}) "
         f"from account {synthetic_account} amount INR 15000"
     )
+    progress("target_analysis", "Baseline log line built with 3 synthetic identifiers")
 
     # EBCP-Guard: protected log
     from app.cryptography.masking import mask_name, mask_email, mask_account_number
@@ -76,9 +93,11 @@ def attack_1_plaintext_log(req: AttackSimulationRequest) -> AttackSimulationResp
         f"(email: {masked_email}) "
         f"from account {masked_account} amount INR 15000"
     )
+    progress("attack_execution", "Masked log line built; searching both logs for the identifiers")
 
     pii_in_baseline = all(x in baseline_log for x in [synthetic_name, synthetic_email, synthetic_account])
     pii_in_protected = any(x in protected_log for x in [synthetic_name, synthetic_email, synthetic_account])
+    progress("security_verification", f"Identifiers recoverable: baseline={pii_in_baseline}, protected={pii_in_protected}")
 
     return AttackSimulationResponse(
         scenario="plaintext_log",
@@ -104,7 +123,7 @@ def attack_1_plaintext_log(req: AttackSimulationRequest) -> AttackSimulationResp
 # Attack 2: Dictionary Attack vs Unsalted Hash
 # ------------------------------------------------------------------ #
 
-def attack_2_dict_attack(req: AttackSimulationRequest) -> AttackSimulationResponse:
+def attack_2_dict_attack(req: AttackSimulationRequest, progress: Progress = _no_progress) -> AttackSimulationResponse:
     """
     Demonstrate why SHA256(email) is insufficient vs HMAC-SHA256 with secret key.
     """
@@ -122,6 +141,7 @@ def attack_2_dict_attack(req: AttackSimulationRequest) -> AttackSimulationRespon
     target_sha256 = hashlib.sha256(target_email.encode()).hexdigest()
     dict_sha256 = {e: hashlib.sha256(e.encode()).hexdigest() for e in dict_emails}
     sha256_match = any(h == target_sha256 for h in dict_sha256.values())
+    progress("target_analysis", f"Plain SHA-256 computed for a {len(dict_emails)}-entry dictionary")
 
     # EBCP-Guard: HMAC-SHA256 with derived key
     target_token, epoch, kv = generate_token(
@@ -130,10 +150,12 @@ def attack_2_dict_attack(req: AttackSimulationRequest) -> AttackSimulationRespon
         tenant_id="bank_a",
         purpose="ANALYTICS",
     )
+    progress("attack_execution", "HMAC token generated; attempting a guess without the key")
     # Attacker has no key — can only try HMAC with wrong keys
     attacker_fake_key = b"0" * 32
     attacker_attempt = "EMAIL_" + hmac_lib.new(attacker_fake_key, target_email.encode(), hashlib.sha256).hexdigest()
     hmac_match = hmac_lib.compare_digest(target_token, attacker_attempt)
+    progress("security_verification", f"Dictionary match: SHA-256={sha256_match}, HMAC={hmac_match}")
 
     return AttackSimulationResponse(
         scenario="dict_attack",
@@ -161,7 +183,7 @@ def attack_2_dict_attack(req: AttackSimulationRequest) -> AttackSimulationRespon
 # Attack 3: Cross-Tenant Token Correlation
 # ------------------------------------------------------------------ #
 
-def attack_3_cross_tenant(req: AttackSimulationRequest) -> AttackSimulationResponse:
+def attack_3_cross_tenant(req: AttackSimulationRequest, progress: Progress = _no_progress) -> AttackSimulationResponse:
     """
     Demonstrate scope separation: same entity → different tokens across scopes.
     """
@@ -174,6 +196,7 @@ def attack_3_cross_tenant(req: AttackSimulationRequest) -> AttackSimulationRespo
     token_a1, _, _ = generate_token(customer_email, "EMAIL", "bank_a", "PAYMENT_PROCESSING", epoch)
     token_a2, _, _ = generate_token(customer_email, "EMAIL", "bank_a", "PAYMENT_PROCESSING", epoch)
     same_scope_stable = hmac_lib.compare_digest(token_a1, token_a2)
+    progress("target_analysis", f"Same-scope tokens generated; stable={same_scope_stable}")
 
     # Different purpose (should be DIFFERENT)
     token_analytics, _, _ = generate_token(customer_email, "EMAIL", "bank_a", "ANALYTICS", epoch)
@@ -181,9 +204,11 @@ def attack_3_cross_tenant(req: AttackSimulationRequest) -> AttackSimulationRespo
 
     # Different tenant (should be DIFFERENT)
     token_bank_b, _, _ = generate_token(customer_email, "EMAIL", "bank_b", "PAYMENT_PROCESSING", epoch)
+    progress("attack_execution", "Cross-purpose and cross-tenant tokens generated")
     diff_tenant_separated = not hmac_lib.compare_digest(token_a1, token_bank_b)
 
     all_separated = diff_purpose_separated and diff_tenant_separated
+    progress("security_verification", f"Tokens separated: purpose={diff_purpose_separated}, tenant={diff_tenant_separated}")
 
     return AttackSimulationResponse(
         scenario="cross_tenant",
@@ -212,7 +237,7 @@ def attack_3_cross_tenant(req: AttackSimulationRequest) -> AttackSimulationRespo
 # Attack 4: Cumulative Exposure
 # ------------------------------------------------------------------ #
 
-def attack_4_cumulative_exposure(req: AttackSimulationRequest) -> AttackSimulationResponse:
+def attack_4_cumulative_exposure(req: AttackSimulationRequest, progress: Progress = _no_progress) -> AttackSimulationResponse:
     """
     Show how per-request DLP misses aggregate risk that EBCP-Guard detects.
     """
@@ -226,13 +251,16 @@ def attack_4_cumulative_exposure(req: AttackSimulationRequest) -> AttackSimulati
         ExposureEventRecord(customer_id, "bank_a", ["ACCOUNT_NUMBER"], "/accounts", "CUSTOMER_SUPPORT", "internal_payment", "MASK"),
         ExposureEventRecord(customer_id, "bank_a", ["EMAIL"], "/marketing", "MARKETING", "third_party_analytics", "ALLOW"),
     ]
+    progress("target_analysis", f"{len(events)} disclosures prepared for a synthetic customer")
 
     engine = CumulativeExposureEngine()
     comparison = engine.compare_with_perrequest_baseline(events, "S2", "third_party_analytics")
+    progress("attack_execution", "Disclosures evaluated per request and cumulatively")
 
     per_request_actions = [e["recommended_action"] for e in comparison["per_request_analysis"]]
     cumulative_action = comparison["cumulative_analysis"]["recommended_action"]
     escalation = comparison["escalation_detected"]
+    progress("security_verification", f"Cumulative decision: {cumulative_action}; escalation detected: {escalation}")
 
     return AttackSimulationResponse(
         scenario="cumulative",
@@ -254,7 +282,7 @@ def attack_4_cumulative_exposure(req: AttackSimulationRequest) -> AttackSimulati
 # Attack 5: Unauthorized Decryption
 # ------------------------------------------------------------------ #
 
-def attack_5_unauth_decrypt(req: AttackSimulationRequest) -> AttackSimulationResponse:
+def attack_5_unauth_decrypt(req: AttackSimulationRequest, progress: Progress = _no_progress) -> AttackSimulationResponse:
     """Attempt decryption without authorization."""
     from app.cryptography.encryption import encrypt_value, decrypt_value
     from app.core.exceptions import AuthenticationTagError, CryptographyError
@@ -264,6 +292,7 @@ def attack_5_unauth_decrypt(req: AttackSimulationRequest) -> AttackSimulationRes
 
     # Encrypt legitimately
     pkg = encrypt_value(plaintext, "ACCOUNT_NUMBER", "bank_a", "PAYMENT_PROCESSING")
+    progress("target_analysis", "Synthetic account number encrypted with AES-256-GCM")
 
     results = {}
 
@@ -302,8 +331,10 @@ def attack_5_unauth_decrypt(req: AttackSimulationRequest) -> AttackSimulationRes
         results["authorized_decryption"] = f"SUCCESS — authorized party can decrypt (expected behavior)"
     except Exception as e:
         results["authorized_decryption"] = f"UNEXPECTED ERROR: {e}"
+    progress("attack_execution", "Wrong-scope, tampered and authorized decryptions attempted")
 
     all_blocked = all("BLOCKED" in v for k, v in results.items() if k != "authorized_decryption")
+    progress("security_verification", f"All unauthorized attempts blocked: {all_blocked}")
 
     return AttackSimulationResponse(
         scenario="unauth_decrypt",
@@ -324,7 +355,7 @@ def attack_5_unauth_decrypt(req: AttackSimulationRequest) -> AttackSimulationRes
 # Attack 6: Audit Tampering
 # ------------------------------------------------------------------ #
 
-def attack_6_audit_tamper(req: AttackSimulationRequest) -> AttackSimulationResponse:
+def attack_6_audit_tamper(req: AttackSimulationRequest, progress: Progress = _no_progress) -> AttackSimulationResponse:
     """Show that audit chain detects tampering."""
     from app.cryptography.audit_integrity import (
         compute_event_hash, verify_chain, build_merkle_tree, GENESIS_HASH
@@ -344,6 +375,7 @@ def attack_6_audit_tamper(req: AttackSimulationRequest) -> AttackSimulationRespo
             "sequence_number": i,
         })
         prev = curr
+    progress("target_analysis", "Clean audit hash chain built with 5 events")
 
     # Tamper with event index 2
     tampered_events = [dict(e) for e in events]
@@ -354,9 +386,11 @@ def attack_6_audit_tamper(req: AttackSimulationRequest) -> AttackSimulationRespo
         tampered_events[2]["safe_metadata"]
     )
     # But they forget to update the chain forward → event 3's previous_hash is now wrong
+    progress("attack_execution", "Audit event 2 altered and its hash recomputed")
 
     original_valid, orig_fail_seq, _ = verify_chain(events, GENESIS_HASH)
     tampered_valid, tamp_fail_seq, tamp_fail_id = verify_chain(tampered_events, GENESIS_HASH)
+    progress("security_verification", f"Chain valid: original={original_valid}, tampered={tampered_valid}")
 
     event_hashes = [e["current_hash"] for e in events]
     merkle_root, _ = build_merkle_tree(event_hashes)
@@ -386,7 +420,7 @@ def attack_6_audit_tamper(req: AttackSimulationRequest) -> AttackSimulationRespo
 # Attack 7: External Exfiltration Policy
 # ------------------------------------------------------------------ #
 
-def attack_7_exfiltration(req: AttackSimulationRequest) -> AttackSimulationResponse:
+def attack_7_exfiltration(req: AttackSimulationRequest, progress: Progress = _no_progress) -> AttackSimulationResponse:
     """Policy engine blocks unauthorized destination."""
     from app.policy.policy_engine import PolicyEngine
 
@@ -397,6 +431,7 @@ def attack_7_exfiltration(req: AttackSimulationRequest) -> AttackSimulationRespo
         {"entity_type": "ACCOUNT_NUMBER", "confidence": 0.88},
         {"entity_type": "EMAIL", "confidence": 0.92},
     ]
+    progress("target_analysis", f"{len(entities)} sensitive entities prepared for an unknown destination")
 
     # Unauthorized destination
     decision = engine.evaluate(
@@ -410,6 +445,9 @@ def attack_7_exfiltration(req: AttackSimulationRequest) -> AttackSimulationRespo
         destination="external_unknown",
         tenant_id="bank_a",
     )
+    progress("attack_execution", "Policy engine evaluated the outbound request")
+
+    progress("security_verification", f"Decision: {decision.overall_action.value}; blocked={decision.is_blocked}")
 
     return AttackSimulationResponse(
         scenario="exfiltration",
@@ -438,7 +476,7 @@ def attack_7_exfiltration(req: AttackSimulationRequest) -> AttackSimulationRespo
 # Attack 8: Model Evasion
 # ------------------------------------------------------------------ #
 
-def attack_8_model_evasion(req: AttackSimulationRequest) -> AttackSimulationResponse:
+def attack_8_model_evasion(req: AttackSimulationRequest, progress: Progress = _no_progress) -> AttackSimulationResponse:
     """Test obfuscated PII detection."""
     from app.detection.regex_detector import get_regex_detector
 
@@ -451,6 +489,7 @@ def attack_8_model_evasion(req: AttackSimulationRequest) -> AttackSimulationResp
     ]
 
     detector = get_regex_detector()
+    progress("target_analysis", f"{len(obfuscated_samples)} obfuscated samples prepared")
     results = []
     for sample in obfuscated_samples:
         matches = detector.detect(sample)
@@ -460,8 +499,11 @@ def attack_8_model_evasion(req: AttackSimulationRequest) -> AttackSimulationResp
             "entity_types": [m.entity_type for m in matches],
         })
 
+    progress("attack_execution", "Detector run against every obfuscated sample")
+
     detected_count = sum(1 for r in results if r["matches_found"] > 0)
     total = len(results)
+    progress("security_verification", f"Detected {detected_count}/{total} obfuscated samples")
 
     return AttackSimulationResponse(
         scenario="evasion",

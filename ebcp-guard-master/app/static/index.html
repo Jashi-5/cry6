@@ -51,6 +51,22 @@
     pre, code {
       font-family: 'JetBrains Mono', monospace;
     }
+    .stage-spinner {
+      display: inline-block;
+      width: 0.75rem;
+      height: 0.75rem;
+      border: 2px solid #334155;
+      border-top-color: #38bdf8;
+      border-radius: 50%;
+      animation: stage-spin 0.8s linear infinite;
+    }
+    @keyframes stage-spin {
+      to { transform: rotate(360deg); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .stage-spinner { animation: none; }
+      .stage-bar { transition: none !important; }
+    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col antialiased">
@@ -578,6 +594,9 @@
         <span id="attack-res-badge" class="px-2.5 py-0.5 rounded text-xs font-mono font-bold"></span>
       </div>
 
+      <!-- Desktop-only execution timeline, filled by runAttackTimeline() -->
+      <ol id="attack-stages" aria-live="polite" class="hidden space-y-3 mb-4 p-3 rounded panel-subtle"></ol>
+
       <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs font-mono mb-3">
         <div class="p-3 rounded panel-subtle text-slate-300">
           <span class="font-semibold block mb-1 text-rose-400">Baseline DLP Outcome:</span>
@@ -816,11 +835,12 @@ Master Key (256-bit Hardware Key Storage)
       status.className = `pipe-status ${colorClass}`;
     }
 
-    function postJson(url, body) {
+    function postJson(url, body, signal) {
       return fetch(url, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(body)
+        body: JSON.stringify(body),
+        signal
       });
     }
 
@@ -972,47 +992,221 @@ Master Key (256-bit Hardware Key Storage)
       document.getElementById('exp-audit-hash').textContent = protect.audit_event_hash;
     }
 
-    async function runAttackScenario(scenario) {
-      const box = document.getElementById('attack-result-box');
-      const title = document.getElementById('attack-res-title');
-      const badge = document.getElementById('attack-res-badge');
-      const baseline = document.getElementById('attack-res-baseline');
-      const ebcp = document.getElementById('attack-res-ebcp');
-      const explanation = document.getElementById('attack-res-exp');
-      const BADGE = "px-2.5 py-0.5 rounded text-xs font-mono font-bold";
-      const name = scenario.toUpperCase().replaceAll('_', ' ');
+    const ATTACK_BADGE = "px-2.5 py-0.5 rounded text-xs font-mono font-bold";
+    const attackName = (scenario) => scenario.toUpperCase().replaceAll('_', ' ');
 
-      box.classList.remove('hidden');
-      title.textContent = `Running Scenario: ${name}…`;
+    function showAttackRunning(name) {
+      document.getElementById('attack-result-box').classList.remove('hidden');
+      document.getElementById('attack-res-title').textContent = `Running Scenario: ${name}…`;
+      const badge = document.getElementById('attack-res-badge');
       badge.textContent = "RUNNING";
-      badge.className = `${BADGE} bg-slate-800 text-slate-300`;
-      baseline.textContent = ebcp.textContent = explanation.textContent = "";
+      badge.className = `${ATTACK_BADGE} bg-slate-800 text-slate-300`;
+      document.getElementById('attack-res-baseline').textContent = "";
+      document.getElementById('attack-res-ebcp').textContent = "";
+      document.getElementById('attack-res-exp').textContent = "";
+    }
+
+    function showAttackResult(name, data) {
+      document.getElementById('attack-res-title').textContent = `Scenario Vector: ${name}`;
+      const badge = document.getElementById('attack-res-badge');
+      badge.textContent = data.result;
+      badge.className = data.result === 'PROTECTED'
+        ? `${ATTACK_BADGE} bg-emerald-950 text-emerald-400 border border-emerald-800`
+        : `${ATTACK_BADGE} bg-amber-950 text-amber-400 border border-amber-800`;
+      document.getElementById('attack-res-baseline').textContent = data.baseline_outcome;
+      document.getElementById('attack-res-ebcp').textContent = data.ebcp_guard_outcome;
+      document.getElementById('attack-res-exp').textContent = data.explanation;
+    }
+
+    function showAttackFailure(name, err) {
+      console.error("Attack verification failed:", err);
+      document.getElementById('attack-res-title').textContent = `Scenario Failed: ${name}`;
+      const badge = document.getElementById('attack-res-badge');
+      badge.textContent = "FAILED";
+      badge.className = `${ATTACK_BADGE} bg-rose-950 text-rose-400 border border-rose-800`;
+      document.getElementById('attack-res-baseline').textContent = "Not available.";
+      document.getElementById('attack-res-ebcp').textContent = "Not available.";
+      document.getElementById('attack-res-exp').textContent = "Unable to run this scenario. Check that the server is running and try again.";
+      refreshGatewayStatus();
+    }
+
+    // Desktop = wide viewport with a mouse. Phones, tablets and narrow windows keep the immediate flow.
+    const isDesktopAttackView = () =>
+      window.matchMedia('(min-width: 768px) and (hover: hover) and (pointer: fine)').matches;
+
+    let attackRunning = false; // one attack at a time, on every device
+
+    async function runAttackScenario(scenario) {
+      if (attackRunning) return;
+      if (isDesktopAttackView()) return runAttackTimeline(scenario);
+
+      attackRunning = true;
+      document.getElementById('attack-stages').classList.add('hidden');
+      const name = attackName(scenario);
+      showAttackRunning(name);
 
       try {
         const res = await postJson('/api/v1/simulate-attack', { scenario: scenario, tenant_id: "demo_bank" });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
-
-        title.textContent = `Scenario Vector: ${name}`;
-        badge.textContent = data.result;
-        badge.className = data.result === 'PROTECTED'
-          ? `${BADGE} bg-emerald-950 text-emerald-400 border border-emerald-800`
-          : `${BADGE} bg-amber-950 text-amber-400 border border-amber-800`;
-        baseline.textContent = data.baseline_outcome;
-        ebcp.textContent = data.ebcp_guard_outcome;
-        explanation.textContent = data.explanation;
+        showAttackResult(name, await res.json());
       } catch (err) {
-        console.error("Attack verification failed:", err);
-        title.textContent = `Scenario Failed: ${name}`;
-        badge.textContent = "FAILED";
-        badge.className = `${BADGE} bg-rose-950 text-rose-400 border border-rose-800`;
-        baseline.textContent = ebcp.textContent = "Not available.";
-        explanation.textContent = "Unable to run this scenario. Check that the server is running and try again.";
-        refreshGatewayStatus();
+        showAttackFailure(name, err);
+      } finally {
+        attackRunning = false;
       }
 
+      document.getElementById('attack-result-box').scrollIntoView();
+      document.getElementById('attack-res-title').focus({ preventScroll: true });
+    }
+
+    // ---- Desktop demonstration timeline ----
+    // Every stage waits for its real event from /simulate-attack/stream, then stays on screen
+    // for at least `ms`. The backend finishes in milliseconds; `ms` paces the display only.
+    const ATTACK_STAGES = [
+      { key: 'attack_initiated', name: 'Attack Initiated', ms: 800 },
+      { key: 'target_analysis', name: 'Target Analysis', ms: 1500 },
+      { key: 'attack_execution', name: 'Attack Execution', ms: 2000 },
+      { key: 'security_verification', name: 'Security Verification', ms: 1500 },
+      { key: 'final_result', name: 'Final Result', ms: 800 },
+    ];
+
+    async function* readAttackEvents(res) {
+      const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
+      let buffer = '';
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) return;
+        buffer += value;
+        const lines = buffer.split('\n');
+        buffer = lines.pop();
+        for (const line of lines) if (line) yield JSON.parse(line);
+      }
+    }
+
+    const STAGE_STATES = {
+      pending: { icon: '○', color: 'text-slate-500', label: 'Pending' },
+      running: { icon: '', color: 'text-sky-400', label: 'Running' },
+      done: { icon: '✓', color: 'text-emerald-400', label: 'Complete' },
+      warn: { icon: '!', color: 'text-amber-400', label: 'Complete' },
+      failed: { icon: '✕', color: 'text-rose-400', label: 'Failed' },
+      skipped: { icon: '–', color: 'text-slate-500', label: 'Not run' },
+    };
+
+    function renderAttackStages() {
+      const list = document.getElementById('attack-stages');
+      list.replaceChildren(...ATTACK_STAGES.map((stage) => {
+        const li = document.createElement('li');
+        li.className = 'text-xs';
+        li.innerHTML = `
+          <div class="flex items-center gap-2">
+            <span data-part="icon" aria-hidden="true" class="w-4 flex justify-center font-bold"></span>
+            <span data-part="name" class="font-semibold text-slate-200"></span>
+            <span data-part="state" class="ml-auto font-mono"></span>
+          </div>
+          <p data-part="message" class="ml-6 mt-0.5 text-slate-400 min-h-4"></p>
+          <div class="ml-6 mt-1 h-1 rounded bg-slate-800 overflow-hidden">
+            <div data-part="bar" class="stage-bar h-full bg-sky-500" style="width:0"></div>
+          </div>`;
+        li.querySelector('[data-part="name"]').textContent = stage.name;
+        return li;
+      }));
+      list.classList.remove('hidden');
+      ATTACK_STAGES.forEach((_, i) => setAttackStage(i, 'pending'));
+    }
+
+    function setAttackStage(i, state, message) {
+      const row = document.getElementById('attack-stages').children[i];
+      const part = (name) => row.querySelector(`[data-part="${name}"]`);
+      const { icon, color, label } = STAGE_STATES[state];
+      part('icon').className = `w-4 flex justify-center font-bold ${color}`;
+      part('icon').innerHTML = state === 'running' ? '<span class="stage-spinner"></span>' : icon;
+      part('state').className = `ml-auto font-mono ${color}`;
+      part('state').textContent = label;
+      if (message !== undefined) part('message').textContent = message;
+
+      const bar = part('bar');
+      if (state === 'running') {
+        // Stops short of full: only a completed stage shows 100%.
+        void bar.offsetWidth;
+        bar.style.transition = `width ${ATTACK_STAGES[i].ms}ms linear`;
+        bar.style.width = '95%';
+      } else if (state !== 'pending') {
+        bar.style.transition = 'none';
+        bar.style.width = state === 'skipped' ? '0' : '100%';
+        bar.className = `stage-bar h-full ${{ done: 'bg-emerald-500', warn: 'bg-amber-500', failed: 'bg-rose-500' }[state] || ''}`;
+      }
+    }
+
+    function setAttackButtonsDisabled(disabled) {
+      document.querySelectorAll('button[onclick^="runAttackScenario"]').forEach((btn) => {
+        btn.disabled = disabled;
+        btn.classList.toggle('opacity-50', disabled);
+        btn.classList.toggle('cursor-not-allowed', disabled);
+      });
+    }
+
+    async function runAttackTimeline(scenario) {
+      attackRunning = true;
+      setAttackButtonsDisabled(true);
+
+      const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+      const box = document.getElementById('attack-result-box');
+      const title = document.getElementById('attack-res-title');
+      const name = attackName(scenario);
+      let current = 0;
+
+      showAttackRunning(name);
+      renderAttackStages();
       box.scrollIntoView();
       title.focus({ preventScroll: true });
+
+      try {
+        setAttackStage(0, 'running', 'Sending request to the backend…');
+        const stageStart = [performance.now()];
+        const res = await postJson(
+          '/api/v1/simulate-attack/stream',
+          { scenario: scenario, tenant_id: "demo_bank" },
+          AbortSignal.timeout(30000) // a hung server must not lock the buttons forever
+        );
+        if (!res.ok) throw new Error(`Backend returned HTTP ${res.status}`);
+        const events = readAttackEvents(res);
+
+        for (current = 0; current < ATTACK_STAGES.length; current++) {
+          const stage = ATTACK_STAGES[current];
+          if (current > 0) {
+            stageStart[current] = performance.now();
+            setAttackStage(current, 'running', 'Waiting for the backend…');
+          }
+
+          const { value: event, done } = await events.next();
+          if (done) throw new Error('Backend stream ended before this stage');
+          if (event.stage === 'error') throw new Error(event.message);
+          if (event.stage !== stage.key) throw new Error('Backend reported an unexpected stage');
+          setAttackStage(current, 'running', `${event.message} (backend +${event.elapsed_ms} ms)`);
+
+          let data = null;
+          if (stage.key === 'final_result') {
+            data = event.result;
+            if (data?.scenario !== scenario || !['PROTECTED', 'PARTIAL', 'VULNERABLE'].includes(data.result)) {
+              throw new Error('Backend response did not match this scenario');
+            }
+            showAttackResult(name, data);
+            box.scrollIntoView({ block: 'nearest' });
+          }
+
+          await wait(stage.ms - (performance.now() - stageStart[current]));
+          setAttackStage(current, data && data.result !== 'PROTECTED' ? 'warn' : 'done');
+        }
+      } catch (err) {
+        const reason = err.name === 'TimeoutError' ? 'No backend response after 30 seconds' : err.message;
+        setAttackStage(current, 'failed', reason);
+        for (let i = current + 1; i < ATTACK_STAGES.length; i++) setAttackStage(i, 'skipped');
+        showAttackFailure(name, err);
+      } finally {
+        attackRunning = false;
+        setAttackButtonsDisabled(false);
+        title.focus({ preventScroll: true });
+      }
     }
   </script>
 </body>

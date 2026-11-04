@@ -1,20 +1,23 @@
 """Exposure history endpoint."""
-from fastapi import APIRouter, Path
+from fastapi import APIRouter, Depends, Path
 from app.api.schemas.schemas import ExposureHistoryResponse, ExposureScoreSchema, RiskLevel
+from app.core.auth import ServiceIdentity, require_service
 from app.exposure.cumulative_exposure_engine import get_exposure_engine
 
 router = APIRouter()
 
 @router.get("/exposure/{customer_id}", response_model=ExposureHistoryResponse)
 async def get_exposure_history(
-    customer_id: str = Path(..., description="Synthetic customer identifier (not real PII)")
+    customer_id: str = Path(..., description="Synthetic customer identifier (not real PII)"),
+    service: ServiceIdentity = Depends(require_service),
 ) -> ExposureHistoryResponse:
     """
     Return the cumulative exposure history for a synthetic customer.
     Uses protected identifiers only — no original PII.
+    Requires an API key and returns only events from tenants that key may access.
     """
     engine = get_exposure_engine()
-    history = engine.get_exposure_history(customer_id, limit=50)
+    history = engine.get_exposure_history(customer_id, limit=50, tenant_filter=service.can_access)
 
     from collections import Counter
     entity_types = [et for evt in history for et in evt.get("entity_types", [])]

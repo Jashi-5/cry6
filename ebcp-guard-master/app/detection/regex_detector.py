@@ -62,9 +62,14 @@ _PATTERNS: list[_PatternSpec] = [
     _compile("EMAIL", r"\b[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}\b",
              0.95, "email_rfc5322"),
 
+    # Disguised email: user%40bank.com, user[at]bank[dot]com, user(at)bank.com
+    _compile("EMAIL",
+             r"\b[\w.%+\-]+(?:\[dot\][\w.%+\-]+)*(?:%40|\s?\[at\]\s?|\s?\(at\)\s?)[\w\-]+(?:(?:\.|\[dot\])[\w\-]+)+",
+             0.80, "email_disguised"),
+
     # --- Indian PAN (Permanent Account Number)
-    # Format: AAAAA9999A — 5 uppercase letters, 4 digits, 1 uppercase letter
-    _compile("PAN", r"\b[A-Z]{5}[0-9]{4}[A-Z]\b",
+    # Format: AAAAA9999A — 5 uppercase letters, 4 digits, 1 uppercase letter (optionally split)
+    _compile("PAN", r"\b[A-Z]{5}[\s\-]?[0-9]{4}[\s\-]?[A-Z]\b",
              0.92, "pan_india"),
 
     # --- Aadhaar-like (12 digits, optionally spaced in groups of 4)
@@ -86,8 +91,10 @@ _PATTERNS: list[_PatternSpec] = [
              0.70, "upi_generic"),
 
     # --- Indian Mobile Number
-    # Starts with 6-9, 10 digits, optional +91 or 0 prefix
-    _compile("PHONE", r"(?:(?:\+91|0091|0)?[-\s]?)?[6-9]\d{9}\b",
+    # Starts with 6-9, 10 digits (optionally split 5-5), optional +91 or 0 prefix.
+    # The separator belongs to the prefix only: a captured leading space makes the
+    # value impossible to find in the original field, which leaks it.
+    _compile("PHONE", r"(?<!\d)(?:(?:\+91|0091|0)[-\s]?)?[6-9]\d{4}[-\s]?\d{5}\b",
              0.88, "mobile_india"),
 
     # --- International Phone (E.164 style)
