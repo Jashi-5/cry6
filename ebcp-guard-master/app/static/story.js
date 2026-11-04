@@ -310,6 +310,7 @@ function selectAnswer(action) {
 
 const feed = mountFeed($('feed-mount'), { onRender: (rows) => {
   relayout();
+  loadChain();
   if (window.gsap && motionOk() && rows.length) gsap.from(rows, { opacity: 0, duration: .3, stagger: .015, clearProps: 'opacity' });
 } });
 const reveal = mountReveal($('reveal-mount'), { onAttempt: () => { feed.refresh(); relayout(); } });
@@ -324,8 +325,190 @@ $('attack-sheet').addEventListener('click', (e) => { if (e.target === e.currentT
 
 selectPreset('payment');
 buildAttacks();
-fetch('/docs').then((r) => { if (!r.ok) $('docs-link').hidden = true; }).catch(() => { $('docs-link').hidden = true; });
+fetch('/docs').then((r) => r.ok).catch(() => false).then((up) => {
+  document.querySelectorAll('#docs-link, [data-docs]').forEach((link) => { link.hidden = !up; });
+});
 feed.refresh();
+
+// ---- Footer ----
+// One node per recent audit event, oldest on the left.
+let chainKey = '';
+async function loadChain() {
+  const read = $('chain-read');
+  const line = $('chain');
+  const message = (text) => { chainKey = ''; line.replaceChildren(); read.textContent = text; };
+  try {
+    const res = await fetch(`${API}/audit/events?tenant_id=${DEMO_TENANT}&limit=12`);
+    if (!res.ok) throw new Error();
+    const events = (await res.json()).reverse();
+    if (!events.length) { message('No events yet. Run a request above.'); return; }
+    const key = events.map((e) => e.sequence_number).join();
+    if (key === chainKey) return; // keeps keyboard focus when nothing changed
+    chainKey = key;
+    const select = (node, text) => {
+      line.querySelectorAll('.on').forEach((n) => n.classList.remove('on'));
+      node.classList.add('on');
+      read.textContent = text;
+    };
+    line.replaceChildren(...events.map((e) => {
+      const risk = typeof e.risk_score === 'number' ? ` risk ${e.risk_score.toFixed(2)}` : '';
+      const text = `#${e.sequence_number} ${e.protection_action || e.event_type}${risk} ${e.hash_prefix}…`;
+      const node = el('button', 'chain-node');
+      node.type = 'button';
+      node.setAttribute('aria-label', text);
+      ['pointerenter', 'focus', 'click'].forEach((type) => node.addEventListener(type, () => select(node, text)));
+      return node;
+    }));
+    const last = line.lastElementChild;
+    select(last, last.getAttribute('aria-label'));
+  } catch {
+    message('Live log unavailable.');
+  }
+}
+
+const hoverMotion = () => motionOk() && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+
+// The hairline bends toward the pointer, then wobbles back on release.
+function setupString() {
+  const svg = $('string');
+  const path = svg.querySelector('path');
+  let x = 50; let y = 50; let v = 0; let target = 50; let raf = 0;
+  const stringTick = () => {
+    raf = 0;
+    v = (v + (target - y) * .12) * .88;
+    y += v;
+    if (Math.abs(target - y) + Math.abs(v) < .05) { y = target; v = 0; } else raf = requestAnimationFrame(stringTick);
+    path.setAttribute('d', `M0 50 Q${x.toFixed(2)} ${(50 + (y - 50) * 2).toFixed(2)} 100 50`);
+  };
+  const wake = () => { if (!raf) raf = requestAnimationFrame(stringTick); };
+  svg.addEventListener('pointermove', (e) => {
+    if (!hoverMotion()) return;
+    const box = svg.getBoundingClientRect();
+    x = (e.clientX - box.left) / box.width * 100;
+    target = (e.clientY - box.top) / box.height * 100;
+    wake();
+  });
+  svg.addEventListener('pointerleave', () => { target = 50; wake(); });
+}
+
+// The pointer is the attacker: data backs away from it, and raw values turn masked as it gets close.
+const PIECES = [
+  { kind: 'stamp', x: 13, y: 33, s: 10, rot: -8, back: true, response: .85, mx: 13, my: 58, ms: 20 },
+  { kind: 'card', cap: 'Email', raw: 'rohan.gupta@example.in', safe: 'r*********a@example.in', x: 47, y: 26, s: 20, rot: -6, back: true, response: 1.1, hideOnPhone: true },
+  { kind: 'card', cap: 'Account number', raw: '123456789012', safe: '********9012', x: 26, y: 34, s: 15, rot: 7, response: 1, mx: 25, my: 30, ms: 36 },
+  { kind: 'phone', x: 88, y: 46, s: 11, rot: 8, back: true, response: .95, mx: 89, my: 36, ms: 20 },
+  { kind: 'card', cap: 'Aadhaar', raw: '4567 8901 2345', safe: 'XXXX XXXX 2345', x: 69, y: 30, s: 15, rot: -5, response: 1.25, mx: 66, my: 24, ms: 36 },
+  { kind: 'sticker', text: 'Masked.', tone: 'air', x: 5, y: 12, s: 8, rot: -12, response: 1.15, mx: 10, my: 12, ms: 22 },
+  { kind: 'sticker', text: 'Tokenized.', tone: 'ember', x: 36, y: 62, s: 9, rot: 11, response: 1.2, mx: 44, my: 58, ms: 22 },
+  { kind: 'sticker', text: 'Encrypted.', tone: 'pale', x: 79, y: 14, s: 9, rot: 12, response: 1.1, mx: 70, my: 58, ms: 22 },
+];
+
+function buildPiece(piece) {
+  const node = el('div', `piece piece-${piece.kind}${piece.back ? ' piece-back' : ''}${piece.hideOnPhone ? ' piece-hide' : ''}`);
+  node.setAttribute('aria-hidden', 'true');
+  [['--x', piece.x], ['--y', piece.y], ['--s', piece.s], ['--mx', piece.mx ?? piece.x], ['--my', piece.my ?? piece.y], ['--ms', piece.ms ?? piece.s]]
+    .forEach(([name, value]) => node.style.setProperty(name, value));
+  node.style.transform = `translate(-50%, -50%) rotate(${piece.rot}deg)`;
+  if (piece.kind === 'stamp') node.append(el('i', 'crest'));
+  if (piece.kind === 'sticker') node.append(el('i', `shield tone-${piece.tone}`), el('span', 'sticker-text', piece.text));
+  if (piece.kind === 'phone') {
+    const screen = el('div', 'phone-screen s-pale');
+    screen.append(chip('ENCRYPT'));
+    const phone = el('div', 'phone');
+    phone.append(screen);
+    node.append(phone);
+  }
+  if (piece.kind === 'card') {
+    node.classList.add('s-ember');
+    node.append(el('i', 'crest'), el('p', 'qcap', piece.cap), el('p', 'mono card-raw', piece.raw), el('p', 'mono card-safe', piece.safe));
+  }
+  return node;
+}
+
+function setupNudge() {
+  const stage = $('mark-stage');
+  const nodes = PIECES.map(buildPiece);
+  stage.append(...nodes);
+  const bodies = PIECES.map(() => ({ x: 0, y: 0, r: 0, vx: 0, vy: 0, vr: 0, safe: false }));
+  const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
+  let pointer = null; let raf = 0; let last = 0;
+
+  const paint = (i) => {
+    const b = bodies[i];
+    nodes[i].style.transform = `translate(-50%, -50%) translate3d(${b.x.toFixed(2)}px, ${b.y.toFixed(2)}px, 0) rotate(${PIECES[i].rot + b.r}deg)`;
+  };
+  const setSafe = (i, safe) => {
+    const b = bodies[i];
+    if (PIECES[i].kind !== 'card' || b.safe === safe) return;
+    b.safe = safe;
+    nodes[i].classList.toggle('is-safe', safe);
+    nodes[i].classList.toggle('s-ember', !safe);
+    nodes[i].classList.toggle('s-ink', safe);
+  };
+  const stop = () => {
+    cancelAnimationFrame(raf);
+    raf = 0; last = 0; pointer = null;
+    bodies.forEach((b, i) => { b.x = b.y = b.r = b.vx = b.vy = b.vr = 0; paint(i); setSafe(i, false); });
+  };
+  const nudgeTick = (now) => {
+    raf = 0;
+    const dt = last ? clamp((now - last) / 1000, 1 / 240, 1 / 30) : 1 / 60;
+    last = now;
+    const { clientWidth: width, clientHeight: height } = stage;
+    const phone = width <= 600;
+    const scale = clamp(width / 1200, .4, 1.5);
+    const range = 190 * scale;
+    const friction = Math.exp(-15 * dt);
+    let moving = false;
+    bodies.forEach((b, i) => {
+      const piece = PIECES[i];
+      let tx = 0; let ty = 0; let tr = 0;
+      if (pointer) {
+        const dx = width * (phone ? piece.mx ?? piece.x : piece.x) / 100 - pointer.x;
+        const dy = height * (phone ? piece.my ?? piece.y : piece.y) / 100 - pointer.y;
+        const len = Math.hypot(dx, dy) || .1;
+        if (len < range) {
+          const force = Math.pow(1 - len / range, 1.35) * 120 * scale * piece.response;
+          tx = dx / len * force;
+          ty = dy / len * force;
+          tr = clamp((tx - ty * .25) / (120 * scale), -1, 1) * 17;
+        }
+        setSafe(i, len < (bodies[i].safe ? range * 1.5 : range * 1.25));
+      } else setSafe(i, false);
+      b.vx = (b.vx + (tx - b.x) * 115 * dt) * friction;
+      b.vy = (b.vy + (ty - b.y) * 115 * dt) * friction;
+      b.vr = (b.vr + (tr - b.r) * 115 * dt) * friction;
+      b.x += b.vx * dt; b.y += b.vy * dt; b.r += b.vr * dt;
+      if (Math.abs(tx - b.x) + Math.abs(ty - b.y) + Math.abs(tr - b.r) + Math.abs(b.vx) + Math.abs(b.vy) + Math.abs(b.vr) > .08) moving = true;
+      else { b.x = tx; b.y = ty; b.r = tr; b.vx = b.vy = b.vr = 0; }
+      paint(i);
+    });
+    if (moving) raf = requestAnimationFrame(nudgeTick); else last = 0;
+  };
+  const wake = () => { if (!raf) { last = 0; raf = requestAnimationFrame(nudgeTick); } };
+
+  // Without hover or motion, cards show both values, so nothing depends on the pointer.
+  const syncLive = () => { stop(); stage.classList.toggle('nudge-live', hoverMotion()); };
+  syncLive();
+  ['(prefers-reduced-motion: no-preference)', '(hover: hover) and (pointer: fine)'].forEach((q) => window.matchMedia(q).addEventListener('change', syncLive));
+
+  stage.addEventListener('pointermove', (e) => {
+    if (!hoverMotion() || e.pointerType === 'touch') return;
+    const box = stage.getBoundingClientRect();
+    pointer = { x: e.clientX - box.left, y: e.clientY - box.top };
+    wake();
+  });
+  const leave = () => { pointer = null; wake(); };
+  stage.addEventListener('pointerleave', leave);
+  stage.addEventListener('pointercancel', leave);
+  window.addEventListener('blur', stop);
+  document.addEventListener('visibilitychange', stop);
+  new IntersectionObserver(([entry]) => { if (!entry.isIntersecting) stop(); }).observe(stage);
+  new ResizeObserver(stop).observe(stage);
+}
+
+setupString();
+setupNudge();
 
 // ---- Motion: GSAP drives animation and pinning, Lenis smooths the scroll. ----
 function setupMotion() {

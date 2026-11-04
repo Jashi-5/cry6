@@ -265,15 +265,51 @@ ACCOUNT_NUMBER  123456789012</code></li>
         <a class="btn" href="/app">Open dashboard</a>
         <a class="btn btn-ghost" href="/docs" id="docs-link">API docs</a>
       </div>
-      <ul class="recap">
-        <li>Encrypted with AES-256-GCM</li>
-        <li>Tokens scoped by tenant, purpose and epoch</li>
-        <li>An audit chain that exposes edits</li>
-        <li>Exposure tracked across requests</li>
-      </ul>
-      <p class="foot">Demonstration uses synthetic data only.</p>
     </section>
   </main>
+
+  <footer class="site-foot s-ink" id="site-foot">
+    <svg class="string" id="string" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path d="M0 50 Q50 50 100 50" vector-effect="non-scaling-stroke"/></svg>
+
+    <div class="foot-cols">
+      <nav aria-label="Story chapters">
+        <p class="foot-head">The story</p>
+        <a class="hl" href="#problem">The problem</a>
+        <a class="hl" href="#gateway">The gateway</a>
+        <a class="hl" href="#break">The attacks</a>
+        <a class="hl" href="#reveal">Access</a>
+        <a class="hl" href="#logs">The record</a>
+        <a class="hl" href="#evaluation">The results</a>
+      </nav>
+      <nav aria-label="Product">
+        <p class="foot-head">The product</p>
+        <a class="hl" href="#try-gateway">Live demo</a>
+        <a class="hl" href="/app">Dashboard</a>
+        <a class="hl" href="/docs" data-docs>API docs</a>
+      </nav>
+      <div>
+        <p class="foot-head">What it guarantees</p>
+        <ul class="foot-list">
+          <li class="hl">Encrypted with AES-256-GCM</li>
+          <li class="hl">Tokens scoped by tenant, purpose and epoch</li>
+          <li class="hl">An audit chain that exposes edits</li>
+          <li class="hl">Exposure tracked across requests</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="chain">
+      <p class="foot-head">The audit chain, live. Each hash includes the one before it.</p>
+      <div class="chain-line" id="chain" role="group" aria-label="Recent audit events"></div>
+      <p class="chain-read mono" id="chain-read" aria-live="polite"></p>
+    </div>
+
+    <div class="mark-stage" id="mark-stage">
+      <p class="mark-word">EBCP-Guard</p>
+    </div>
+
+    <p class="foot">Demonstration uses synthetic data only.</p>
+  </footer>
 
   <dialog class="sheet-dialog s-ink" id="attack-sheet" aria-labelledby="sheet-title">
     <div class="sheet-head">
