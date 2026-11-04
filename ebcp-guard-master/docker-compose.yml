@@ -1,0 +1,44 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ebcp_guard_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ebcp_user
+      POSTGRES_PASSWORD: ebcp_password
+      POSTGRES_DB: ebcp_guard_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - ebcp_postgres_data:/var/lib/postgresql/data
+      - ./scripts/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ebcp_user -d ebcp_guard_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ebcp_guard_backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgres://ebcp_user:ebcp_password@postgres:5432/ebcp_guard_db
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./models:/app/models
+      - ./dataset:/app/dataset
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+volumes:
+  ebcp_postgres_data:

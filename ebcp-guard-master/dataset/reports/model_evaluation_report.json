@@ -1,0 +1,221 @@
+{
+  "entity_detection": {
+    "span_exact_precision": 0.5447,
+    "span_exact_recall": 0.6228,
+    "span_exact_f1": 0.5811,
+    "total_gold_entities": 1938,
+    "total_pred_entities": 2216,
+    "exact_matches": 1207
+  },
+  "sensitivity_classification": {
+    "accuracy": 1.0,
+    "macro_f1": 0.8,
+    "per_class": {
+      "S0": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 34
+      },
+      "S1": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 120
+      },
+      "S2": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 0
+      },
+      "S3": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 187
+      },
+      "S4": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 109
+      }
+    },
+    "confusion_matrix": {
+      "S0": {
+        "S0": 34,
+        "S1": 0,
+        "S2": 0,
+        "S3": 0,
+        "S4": 0
+      },
+      "S1": {
+        "S0": 0,
+        "S1": 120,
+        "S2": 0,
+        "S3": 0,
+        "S4": 0
+      },
+      "S2": {
+        "S0": 0,
+        "S1": 0,
+        "S2": 0,
+        "S3": 0,
+        "S4": 0
+      },
+      "S3": {
+        "S0": 0,
+        "S1": 0,
+        "S2": 0,
+        "S3": 187,
+        "S4": 0
+      },
+      "S4": {
+        "S0": 0,
+        "S1": 0,
+        "S2": 0,
+        "S3": 0,
+        "S4": 109
+      }
+    },
+    "total_samples": 450
+  },
+  "purpose_classification": {
+    "accuracy": 1.0,
+    "macro_f1": 0.875,
+    "per_class": {
+      "PAYMENT_PROCESSING": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 79
+      },
+      "FRAUD_DETECTION": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 36
+      },
+      "CUSTOMER_SUPPORT": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 83
+      },
+      "ANALYTICS": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 57
+      },
+      "MARKETING": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 57
+      },
+      "AUTHENTICATION": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 93
+      },
+      "REPORTING": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 45
+      },
+      "OTHER": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 0
+      }
+    },
+    "confusion_matrix": {
+      "PAYMENT_PROCESSING": {
+        "PAYMENT_PROCESSING": 79,
+        "FRAUD_DETECTION": 0,
+        "CUSTOMER_SUPPORT": 0,
+        "ANALYTICS": 0,
+        "MARKETING": 0,
+        "AUTHENTICATION": 0,
+        "REPORTING": 0,
+        "OTHER": 0
+      },
+      "FRAUD_DETECTION": {
+        "PAYMENT_PROCESSING": 0,
+        "FRAUD_DETECTION": 36,
+        "CUSTOMER_SUPPORT": 0,
+        "ANALYTICS": 0,
+        "MARKETING": 0,
+        "AUTHENTICATION": 0,
+        "REPORTING": 0,
+        "OTHER": 0
+      },
+      "CUSTOMER_SUPPORT": {
+        "PAYMENT_PROCESSING": 0,
+        "FRAUD_DETECTION": 0,
+        "CUSTOMER_SUPPORT": 83,
+        "ANALYTICS": 0,
+        "MARKETING": 0,
+        "AUTHENTICATION": 0,
+        "REPORTING": 0,
+        "OTHER": 0
+      },
+      "ANALYTICS": {
+        "PAYMENT_PROCESSING": 0,
+        "FRAUD_DETECTION": 0,
+        "CUSTOMER_SUPPORT": 0,
+        "ANALYTICS": 57,
+        "MARKETING": 0,
+        "AUTHENTICATION": 0,
+        "REPORTING": 0,
+        "OTHER": 0
+      },
+      "MARKETING": {
+        "PAYMENT_PROCESSING": 0,
+        "FRAUD_DETECTION": 0,
+        "CUSTOMER_SUPPORT": 0,
+        "ANALYTICS": 0,
+        "MARKETING": 57,
+        "AUTHENTICATION": 0,
+        "REPORTING": 0,
+        "OTHER": 0
+      },
+      "AUTHENTICATION": {
+        "PAYMENT_PROCESSING": 0,
+        "FRAUD_DETECTION": 0,
+        "CUSTOMER_SUPPORT": 0,
+        "ANALYTICS": 0,
+        "MARKETING": 0,
+        "AUTHENTICATION": 93,
+        "REPORTING": 0,
+        "OTHER": 0
+      },
+      "REPORTING": {
+        "PAYMENT_PROCESSING": 0,
+        "FRAUD_DETECTION": 0,
+        "CUSTOMER_SUPPORT": 0,
+        "ANALYTICS": 0,
+        "MARKETING": 0,
+        "AUTHENTICATION": 0,
+        "REPORTING": 45,
+        "OTHER": 0
+      },
+      "OTHER": {
+        "PAYMENT_PROCESSING": 0,
+        "FRAUD_DETECTION": 0,
+        "CUSTOMER_SUPPORT": 0,
+        "ANALYTICS": 0,
+        "MARKETING": 0,
+        "AUTHENTICATION": 0,
+        "REPORTING": 0,
+        "OTHER": 0
+      }
+    },
+    "total_samples": 450
+  }
+}

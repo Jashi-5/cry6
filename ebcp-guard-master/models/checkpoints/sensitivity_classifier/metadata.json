@@ -1,0 +1,85 @@
+{
+  "model_name": "contextual_sensitivity_classifier",
+  "version": "1.0.0",
+  "classes": [
+    "S0",
+    "S1",
+    "S2",
+    "S3",
+    "S4"
+  ],
+  "metrics": {
+    "accuracy": 1.0,
+    "macro_f1": 0.8,
+    "per_class": {
+      "S0": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 34
+      },
+      "S1": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 120
+      },
+      "S2": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 0
+      },
+      "S3": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 187
+      },
+      "S4": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 109
+      }
+    },
+    "confusion_matrix": {
+      "S0": {
+        "S0": 34,
+        "S1": 0,
+        "S2": 0,
+        "S3": 0,
+        "S4": 0
+      },
+      "S1": {
+        "S0": 0,
+        "S1": 120,
+        "S2": 0,
+        "S3": 0,
+        "S4": 0
+      },
+      "S2": {
+        "S0": 0,
+        "S1": 0,
+        "S2": 0,
+        "S3": 0,
+        "S4": 0
+      },
+      "S3": {
+        "S0": 0,
+        "S1": 0,
+        "S2": 0,
+        "S3": 187,
+        "S4": 0
+      },
+      "S4": {
+        "S0": 0,
+        "S1": 0,
+        "S2": 0,
+        "S3": 0,
+        "S4": 109
+      }
+    },
+    "total_samples": 450
+  }
+}

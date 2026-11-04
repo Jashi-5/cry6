@@ -1,0 +1,239 @@
+{
+  "test_records": 450,
+  "gold_types": [
+    "EMAIL",
+    "PHONE",
+    "PERSON",
+    "ACCOUNT_NUMBER",
+    "UPI_ID",
+    "PAN",
+    "AADHAAR"
+  ],
+  "systems": {
+    "EBCP-Guard (regex)": {
+      "scores": {
+        "micro": {
+          "tp": 1503,
+          "fp": 303,
+          "fn": 435,
+          "precision": 0.8322,
+          "recall": 0.7755,
+          "f1": 0.8029
+        },
+        "per_type": {
+          "EMAIL": {
+            "tp": 416,
+            "fp": 0,
+            "fn": 0,
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0
+          },
+          "PHONE": {
+            "tp": 416,
+            "fp": 279,
+            "fn": 0,
+            "precision": 0.5986,
+            "recall": 1.0,
+            "f1": 0.7489
+          },
+          "PERSON": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 296,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0
+          },
+          "ACCOUNT_NUMBER": {
+            "tp": 157,
+            "fp": 0,
+            "fn": 139,
+            "precision": 1.0,
+            "recall": 0.5304,
+            "f1": 0.6932
+          },
+          "UPI_ID": {
+            "tp": 296,
+            "fp": 0,
+            "fn": 0,
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0
+          },
+          "PAN": {
+            "tp": 109,
+            "fp": 0,
+            "fn": 0,
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0
+          },
+          "AADHAAR": {
+            "tp": 109,
+            "fp": 24,
+            "fn": 0,
+            "precision": 0.8195,
+            "recall": 1.0,
+            "f1": 0.9008
+          }
+        }
+      },
+      "latency": {
+        "mean_ms": 0.071,
+        "p50_ms": 0.072,
+        "p95_ms": 0.103
+      }
+    },
+    "Presidio (stock)": {
+      "scores": {
+        "micro": {
+          "tp": 1133,
+          "fp": 1446,
+          "fn": 805,
+          "precision": 0.4393,
+          "recall": 0.5846,
+          "f1": 0.5017
+        },
+        "per_type": {
+          "EMAIL": {
+            "tp": 416,
+            "fp": 0,
+            "fn": 0,
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0
+          },
+          "PHONE": {
+            "tp": 416,
+            "fp": 79,
+            "fn": 0,
+            "precision": 0.8404,
+            "recall": 1.0,
+            "f1": 0.9133
+          },
+          "PERSON": {
+            "tp": 192,
+            "fp": 260,
+            "fn": 104,
+            "precision": 0.4248,
+            "recall": 0.6486,
+            "f1": 0.5134
+          },
+          "ACCOUNT_NUMBER": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 296,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0
+          },
+          "UPI_ID": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 296,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0
+          },
+          "PAN": {
+            "tp": 109,
+            "fp": 1065,
+            "fn": 0,
+            "precision": 0.0928,
+            "recall": 1.0,
+            "f1": 0.1699
+          },
+          "AADHAAR": {
+            "tp": 0,
+            "fp": 42,
+            "fn": 109,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0
+          }
+        }
+      },
+      "latency": {
+        "mean_ms": 6.587,
+        "p50_ms": 6.513,
+        "p95_ms": 9.062
+      }
+    },
+    "Presidio + EBCP regexes": {
+      "scores": {
+        "micro": {
+          "tp": 1725,
+          "fp": 2282,
+          "fn": 213,
+          "precision": 0.4305,
+          "recall": 0.8901,
+          "f1": 0.5803
+        },
+        "per_type": {
+          "EMAIL": {
+            "tp": 416,
+            "fp": 0,
+            "fn": 0,
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0
+          },
+          "PHONE": {
+            "tp": 416,
+            "fp": 79,
+            "fn": 0,
+            "precision": 0.8404,
+            "recall": 1.0,
+            "f1": 0.9133
+          },
+          "PERSON": {
+            "tp": 192,
+            "fp": 260,
+            "fn": 104,
+            "precision": 0.4248,
+            "recall": 0.6486,
+            "f1": 0.5134
+          },
+          "ACCOUNT_NUMBER": {
+            "tp": 296,
+            "fp": 420,
+            "fn": 0,
+            "precision": 0.4134,
+            "recall": 1.0,
+            "f1": 0.585
+          },
+          "UPI_ID": {
+            "tp": 296,
+            "fp": 416,
+            "fn": 0,
+            "precision": 0.4157,
+            "recall": 1.0,
+            "f1": 0.5873
+          },
+          "PAN": {
+            "tp": 109,
+            "fp": 1065,
+            "fn": 0,
+            "precision": 0.0928,
+            "recall": 1.0,
+            "f1": 0.1699
+          },
+          "AADHAAR": {
+            "tp": 0,
+            "fp": 42,
+            "fn": 109,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0
+          }
+        }
+      },
+      "latency": {
+        "mean_ms": 6.632,
+        "p50_ms": 6.659,
+        "p95_ms": 9.165
+      }
+    }
+  }
+}
