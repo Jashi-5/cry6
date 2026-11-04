@@ -18,10 +18,10 @@
           // The existing classes keep working; every shade now resolves to the palette or a tint of it.
           colors: {
             white: '#C8E0F4',
-            slate: { 200: '#C8E0F4', 300: '#C8E0F4', 400: '#9DD1F1', 500: '#9DD1F1', 600: '#508AA8', 700: '#264C61', 800: '#143243', 900: '#0B2434' },
-            sky: { 300: '#9DD1F1', 400: '#9DD1F1', 500: '#9DD1F1', 700: '#508AA8', 800: '#508AA8', 950: '#264C61' },
-            emerald: { 400: '#9DD1F1', 500: '#9DD1F1', 800: '#508AA8', 900: '#264C61', 950: '#143243' },
-            amber: { 400: '#C8E0F4', 500: '#C8E0F4', 800: '#508AA8', 900: '#508AA8', 950: '#264C61' },
+            slate: { 200: '#C8E0F4', 300: '#C8E0F4', 400: '#9DD1F1', 500: '#9DD1F1', 600: '#508AA8', 700: '#508AA8', 800: '#031927', 900: '#031927' },
+            sky: { 300: '#9DD1F1', 400: '#9DD1F1', 500: '#9DD1F1', 700: '#BA1200', 800: '#508AA8', 950: '#031927' },
+            emerald: { 400: '#9DD1F1', 500: '#9DD1F1', 800: '#508AA8', 900: '#508AA8', 950: '#031927' },
+            amber: { 400: '#C8E0F4', 500: '#C8E0F4', 800: '#508AA8', 900: '#508AA8', 950: '#031927' },
             rose: { 400: '#C8E0F4', 500: '#BA1200', 800: '#BA1200', 900: '#BA1200', 950: '#BA1200' },
           },
           fontFamily: {
@@ -41,12 +41,12 @@
       color: #C8E0F4;
     }
     .panel {
-      background-color: #0B2434;
-      border: 1px solid #143243;
+      background-color: #031927;
+      border: 1px solid #508AA8;
     }
     .panel-subtle {
       background-color: #031927;
-      border: 1px solid #143243;
+      border: 1px solid #508AA8;
     }
     .form-input {
       background-color: #031927;
@@ -66,7 +66,7 @@
       display: inline-block;
       width: 0.75rem;
       height: 0.75rem;
-      border: 2px solid #264C61;
+      border: 2px solid #508AA8;
       border-top-color: #9DD1F1;
       border-radius: 50%;
       animation: stage-spin 0.8s linear infinite;
@@ -89,7 +89,7 @@
   <!-- ============================================================== -->
   <!-- TOP NAVIGATION BAR -->
   <!-- ============================================================== -->
-  <header class="border-b border-slate-800 bg-slate-900 sm:sticky sm:top-0 sm:z-50">
+  <header class="border-b border-slate-700 bg-slate-900 sm:sticky sm:top-0 sm:z-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 min-h-14 py-2 flex flex-wrap items-center justify-between gap-2">
       
       <!-- Logo & System Meta -->
@@ -107,22 +107,22 @@
 
       <!-- Navigation Tabs -->
       <nav class="flex flex-wrap gap-1">
-        <button id="nav-btn-gateway" aria-current="page" onclick="switchTab('gateway')" class="px-3 py-1.5 rounded text-xs font-medium transition bg-slate-800 text-sky-400 border border-slate-700">
+        <button id="nav-btn-gateway" aria-current="page" onclick="switchTab('gateway')" class="px-3 py-1.5 rounded text-xs font-medium transition bg-[#BA1200] text-[#C8E0F4] border border-[#BA1200]">
           Gateway
         </button>
-        <button id="nav-btn-hacker" onclick="switchTab('hacker')" class="px-3 py-1.5 rounded text-xs font-medium transition text-slate-400 hover:text-slate-200 hover:bg-slate-800 border border-transparent">
+        <button id="nav-btn-hacker" onclick="switchTab('hacker')" class="px-3 py-1.5 rounded text-xs font-medium transition text-slate-400 hover:text-slate-200 hover:border-[#508AA8] border border-transparent">
           Break It
         </button>
-        <button id="nav-btn-reveal" onclick="switchTab('reveal')" class="px-3 py-1.5 rounded text-xs font-medium transition text-slate-400 hover:text-slate-200 hover:bg-slate-800 border border-transparent">
+        <button id="nav-btn-reveal" onclick="switchTab('reveal')" class="px-3 py-1.5 rounded text-xs font-medium transition text-slate-400 hover:text-slate-200 hover:border-[#508AA8] border border-transparent">
           Reveal
         </button>
-        <button id="nav-btn-logs" onclick="switchTab('logs')" class="px-3 py-1.5 rounded text-xs font-medium transition text-slate-400 hover:text-slate-200 hover:bg-slate-800 border border-transparent">
+        <button id="nav-btn-logs" onclick="switchTab('logs')" class="px-3 py-1.5 rounded text-xs font-medium transition text-slate-400 hover:text-slate-200 hover:border-[#508AA8] border border-transparent">
           Logs
         </button>
-        <button id="nav-btn-evaluation" onclick="switchTab('evaluation')" class="px-3 py-1.5 rounded text-xs font-medium transition text-slate-400 hover:text-slate-200 hover:bg-slate-800 border border-transparent">
+        <button id="nav-btn-evaluation" onclick="switchTab('evaluation')" class="px-3 py-1.5 rounded text-xs font-medium transition text-slate-400 hover:text-slate-200 hover:border-[#508AA8] border border-transparent">
           Evaluation
         </button>
-        <button id="nav-btn-architecture" onclick="switchTab('architecture')" class="px-3 py-1.5 rounded text-xs font-medium transition text-slate-400 hover:text-slate-200 hover:bg-slate-800 border border-transparent">
+        <button id="nav-btn-architecture" onclick="switchTab('architecture')" class="px-3 py-1.5 rounded text-xs font-medium transition text-slate-400 hover:text-slate-200 hover:border-[#508AA8] border border-transparent">
           Specs
         </button>
       </nav>
@@ -142,18 +142,18 @@
   <main id="tab-gateway" class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
     <!-- Scenario Preset Selectors -->
-    <div class="mb-5 flex flex-wrap items-center gap-2 pb-4 border-b border-slate-800/80">
+    <div class="mb-5 flex flex-wrap items-center gap-2 pb-4 border-b border-slate-700/80">
       <span class="text-xs font-medium text-slate-400 uppercase tracking-wider mr-2">Preset Scenarios:</span>
-      <button onclick="loadSample('payment')" class="text-xs px-3 py-1 rounded bg-slate-800/90 hover:bg-slate-700 text-slate-200 border border-slate-700 font-medium transition">
+      <button onclick="loadSample('payment')" class="text-xs px-3 py-1 rounded bg-slate-800/90 hover:border-[#9DD1F1] text-slate-200 border border-slate-700 font-medium transition">
         Core Banking Payment <span class="text-emerald-400 font-mono text-[11px]">(Expected: ENCRYPT)</span>
       </button>
-      <button onclick="loadSample('marketing')" class="text-xs px-3 py-1 rounded bg-slate-800/90 hover:bg-slate-700 text-slate-200 border border-slate-700 font-medium transition">
+      <button onclick="loadSample('marketing')" class="text-xs px-3 py-1 rounded bg-slate-800/90 hover:border-[#9DD1F1] text-slate-200 border border-slate-700 font-medium transition">
         Analytics & Marketing <span class="text-sky-400 font-mono text-[11px]">(Expected: ENCRYPT)</span>
       </button>
-      <button onclick="loadSample('log')" class="text-xs px-3 py-1 rounded bg-slate-800/90 hover:bg-slate-700 text-slate-200 border border-slate-700 font-medium transition">
+      <button onclick="loadSample('log')" class="text-xs px-3 py-1 rounded bg-slate-800/90 hover:border-[#9DD1F1] text-slate-200 border border-slate-700 font-medium transition">
         Telemetry & Logs <span class="text-amber-400 font-mono text-[11px]">(Expected: ENCRYPT)</span>
       </button>
-      <button onclick="loadSample('blacklisted')" class="text-xs px-3 py-1 rounded bg-slate-800/90 hover:bg-slate-700 text-slate-200 border border-slate-700 font-medium transition">
+      <button onclick="loadSample('blacklisted')" class="text-xs px-3 py-1 rounded bg-slate-800/90 hover:border-[#9DD1F1] text-slate-200 border border-slate-700 font-medium transition">
         Untrusted Third-Party <span class="text-rose-400 font-mono text-[11px]">(Expected: BLOCK)</span>
       </button>
     </div>
@@ -163,7 +163,7 @@
 
       <!-- Left Column: Structured Form Input -->
       <div class="lg:col-span-7 panel rounded-lg p-5">
-        <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
+        <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-700">
           <div>
             <h2 class="text-sm font-semibold text-white">Ingress Transaction Parameters</h2>
             <p class="text-xs text-slate-400 mt-0.5">Parameters will be normalized into an API payload before inspection.</p>
@@ -227,7 +227,7 @@
           </div>
 
           <!-- Context Configuration -->
-          <div class="pt-2 border-t border-slate-800">
+          <div class="pt-2 border-t border-slate-700">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <div>
                 <label for="select-endpoint" class="block font-medium text-slate-300 mb-1">Target Endpoint</label>
@@ -253,8 +253,8 @@
         </div>
 
         <!-- Submit Button -->
-        <div class="mt-5 pt-4 border-t border-slate-800">
-          <button id="btn-inspect" onclick="startInspection()" class="w-full py-2.5 px-4 rounded bg-[#9DD1F1] hover:opacity-90 font-semibold text-[#031927] text-xs tracking-wide transition flex items-center justify-center space-x-2">
+        <div class="mt-5 pt-4 border-t border-slate-700">
+          <button id="btn-inspect" onclick="startInspection()" class="w-full py-2.5 px-4 rounded bg-[#BA1200] hover:opacity-90 font-semibold text-[#C8E0F4] text-xs tracking-wide transition flex items-center justify-center space-x-2">
             <span>Process & Inspect API Traffic</span>
           </button>
         </div>
@@ -262,7 +262,7 @@
 
       <!-- Right Column: Live API Request Preview -->
       <div class="lg:col-span-5 flex flex-col panel rounded-lg p-5">
-        <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-800">
+        <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-700">
           <h2 class="text-sm font-semibold text-slate-200">Constructed API Ingress Payload</h2>
           <span class="text-xs font-mono text-slate-400">JSON Schema</span>
         </div>
@@ -285,7 +285,7 @@
     <!-- INSPECTION PIPELINE PROGRESS (No Emojis, Clean Technical Flow) -->
     <!-- ============================================================== -->
     <div id="view-loading" class="hidden panel rounded-lg p-6 max-w-2xl mx-auto my-6">
-      <div class="mb-5 pb-3 border-b border-slate-800 flex items-center justify-between">
+      <div class="mb-5 pb-3 border-b border-slate-700 flex items-center justify-between">
         <div>
           <h2 id="loading-title" tabindex="-1" class="text-sm font-semibold text-white outline-none">Execution Pipeline</h2>
           <p class="text-xs text-slate-400 mt-0.5">Evaluating contextual privacy constraints and generating cryptographic proofs.</p>
@@ -332,8 +332,8 @@
       <h2 id="error-title" tabindex="-1" aria-describedby="error-message" class="text-sm font-semibold text-white outline-none">Unable to Inspect Request</h2>
       <p id="error-message" class="text-xs text-slate-300 mt-1"></p>
       <div class="flex flex-wrap gap-2 mt-4">
-        <button onclick="startInspection()" class="px-3.5 py-1.5 rounded bg-[#9DD1F1] hover:opacity-90 text-xs font-semibold text-[#031927] transition">Try Again</button>
-        <button onclick="resetToForm()" class="px-3.5 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-300 border border-slate-700 transition">Back to Form</button>
+        <button onclick="startInspection()" class="px-3.5 py-1.5 rounded bg-[#BA1200] hover:opacity-90 text-xs font-semibold text-[#C8E0F4] transition">Try Again</button>
+        <button onclick="resetToForm()" class="px-3.5 py-1.5 rounded bg-slate-800 hover:border-[#9DD1F1] text-xs font-medium text-slate-300 border border-slate-700 transition">Back to Form</button>
       </div>
     </div>
 
@@ -353,7 +353,7 @@
           <p id="result-hero-desc" class="text-xs text-slate-400 mt-0.5"></p>
         </div>
 
-        <button onclick="resetToForm()" class="px-3.5 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-300 border border-slate-700 transition">
+        <button onclick="resetToForm()" class="px-3.5 py-1.5 rounded bg-slate-800 hover:border-[#9DD1F1] text-xs font-medium text-slate-300 border border-slate-700 transition">
           Process New Request
         </button>
       </div>
@@ -362,7 +362,7 @@
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Original Ingress -->
         <div class="panel rounded-lg p-4">
-          <div class="flex items-center justify-between mb-2 pb-2 border-b border-slate-800">
+          <div class="flex items-center justify-between mb-2 pb-2 border-b border-slate-700">
             <span class="text-xs font-medium text-slate-300">Raw Ingress Payload (Intercepted)</span>
             <span class="text-xs font-mono text-rose-400 bg-rose-950/60 px-2 py-0.5 rounded border border-rose-900/60">Plaintext PII</span>
           </div>
@@ -373,7 +373,7 @@
 
         <!-- Sanitized Egress -->
         <div class="panel rounded-lg p-4">
-          <div class="flex items-center justify-between gap-2 mb-2 pb-2 border-b border-slate-800">
+          <div class="flex items-center justify-between gap-2 mb-2 pb-2 border-b border-slate-700">
             <span id="result-protected-title" class="text-xs font-medium text-slate-300"></span>
             <span id="result-protected-badge" class="text-xs font-mono px-2 py-0.5 rounded border"></span>
           </div>
@@ -385,12 +385,12 @@
 
       <!-- Explainability Panel -->
       <div class="panel rounded-lg p-5">
-        <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3 pb-2 border-b border-slate-800">
+        <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3 pb-2 border-b border-slate-700">
           Component Breakdown & Audit Proofs
         </h4>
 
         <!-- Internal Subtabs -->
-        <div class="flex flex-wrap gap-x-6 border-b border-slate-800 mb-4 text-xs font-medium">
+        <div class="flex flex-wrap gap-x-6 border-b border-slate-700 mb-4 text-xs font-medium">
           <button id="exp-btn-nlp" aria-current="true" onclick="switchExpTab('nlp')" class="pb-2 text-sky-400 border-b-2 border-sky-400">Entity & Context Analysis</button>
           <button id="exp-btn-crypto" onclick="switchExpTab('crypto')" class="pb-2 text-slate-400 hover:text-slate-200 border-b-2 border-transparent">Cryptographic Specification</button>
           <button id="exp-btn-risk" onclick="switchExpTab('risk')" class="pb-2 text-slate-400 hover:text-slate-200 border-b-2 border-transparent">Exposure Risk Formula</button>
@@ -449,25 +449,25 @@
             <div class="font-mono text-sky-300 text-xs mb-3">R(t) = 0.35·S(t) + 0.30·C(t) + 0.20·L(t) + 0.15·D(t)</div>
 
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center font-mono">
-              <div class="p-2 rounded bg-slate-900 border border-slate-800">
+              <div class="p-2 rounded bg-slate-900 border border-slate-700">
                 <span class="text-slate-400 block text-xs">Sensitivity S(t)</span>
                 <span id="exp-math-s" class="font-bold text-white"></span>
               </div>
-              <div class="p-2 rounded bg-slate-900 border border-slate-800">
+              <div class="p-2 rounded bg-slate-900 border border-slate-700">
                 <span class="text-slate-400 block text-xs">Cumulative C(t)</span>
                 <span id="exp-math-c" class="font-bold text-white"></span>
               </div>
-              <div class="p-2 rounded bg-slate-900 border border-slate-800">
+              <div class="p-2 rounded bg-slate-900 border border-slate-700">
                 <span class="text-slate-400 block text-xs">Linkability L(t)</span>
                 <span id="exp-math-l" class="font-bold text-white"></span>
               </div>
-              <div class="p-2 rounded bg-slate-900 border border-slate-800">
+              <div class="p-2 rounded bg-slate-900 border border-slate-700">
                 <span class="text-slate-400 block text-xs">Destination D(t)</span>
                 <span id="exp-math-d" class="font-bold text-white"></span>
               </div>
             </div>
 
-            <div class="mt-3 pt-2 border-t border-slate-800 flex justify-between items-center font-mono text-xs">
+            <div class="mt-3 pt-2 border-t border-slate-700 flex justify-between items-center font-mono text-xs">
               <span class="text-slate-400">Total Computed Risk Score:</span>
               <span id="exp-math-total" class="font-bold text-sky-400 text-sm"></span>
             </div>
@@ -483,7 +483,7 @@
             </div>
             <div>
               <span class="text-slate-400 block mb-0.5 text-[11px]">Forward-Linked SHA-256 Hash</span>
-              <span id="exp-audit-hash" class="text-sky-300 break-all p-2 rounded bg-slate-900 block border border-slate-800 text-[11px]"></span>
+              <span id="exp-audit-hash" class="text-sky-300 break-all p-2 rounded bg-slate-900 block border border-slate-700 text-[11px]"></span>
             </div>
             <p class="text-slate-400 text-[11px] font-sans pt-1">
               Tamper Evidence: Alteration of previous rows invalidates all subsequent hashes during re-verification.
@@ -499,7 +499,7 @@
   <!-- TAB 2: ADVERSARIAL VERIFICATION SUITE -->
   <!-- ============================================================== -->
   <main id="tab-hacker" class="hidden flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-    <div class="mb-5 pb-3 border-b border-slate-800">
+    <div class="mb-5 pb-3 border-b border-slate-700">
       <h1 class="text-lg font-semibold text-white">Break It</h1>
       <p class="text-xs text-slate-400 mt-0.5">
         Execute controlled penetration scenarios against synthetic financial records to benchmark baseline DLP against EBCP-Guard.
@@ -521,7 +521,7 @@
             Attacker tests precomputed rainbow tables against customer pseudonyms.
           </p>
         </div>
-        <button onclick="runAttackScenario('dict_attack')" class="w-full py-1.5 px-3 rounded text-xs font-medium text-slate-200 bg-slate-800 hover:bg-slate-700 border border-slate-700 transition">
+        <button onclick="runAttackScenario('dict_attack')" class="w-full py-1.5 px-3 rounded text-xs font-medium text-[#031927] bg-[#9DD1F1] hover:opacity-90 border border-[#9DD1F1] transition">
           Run Dictionary Attack
         </button>
       </div>
@@ -538,7 +538,7 @@
             Attacker attempts to link identical customer identities across Bank A and Bank B.
           </p>
         </div>
-        <button onclick="runAttackScenario('cross_tenant')" class="w-full py-1.5 px-3 rounded text-xs font-medium text-slate-200 bg-slate-800 hover:bg-slate-700 border border-slate-700 transition">
+        <button onclick="runAttackScenario('cross_tenant')" class="w-full py-1.5 px-3 rounded text-xs font-medium text-[#031927] bg-[#9DD1F1] hover:opacity-90 border border-[#9DD1F1] transition">
           Run Cross-Tenant Correlation
         </button>
       </div>
@@ -555,7 +555,7 @@
             Unprivileged reporting service requests plaintext decryption without role authorization.
           </p>
         </div>
-        <button onclick="runAttackScenario('unauth_decrypt')" class="w-full py-1.5 px-3 rounded text-xs font-medium text-slate-200 bg-slate-800 hover:bg-slate-700 border border-slate-700 transition">
+        <button onclick="runAttackScenario('unauth_decrypt')" class="w-full py-1.5 px-3 rounded text-xs font-medium text-[#031927] bg-[#9DD1F1] hover:opacity-90 border border-[#9DD1F1] transition">
           Run Unauthorized Decryption
         </button>
       </div>
@@ -572,7 +572,7 @@
             Malicious insider directly modifies past audit database records to conceal exfiltration.
           </p>
         </div>
-        <button onclick="runAttackScenario('audit_tamper')" class="w-full py-1.5 px-3 rounded text-xs font-medium text-slate-200 bg-slate-800 hover:bg-slate-700 border border-slate-700 transition">
+        <button onclick="runAttackScenario('audit_tamper')" class="w-full py-1.5 px-3 rounded text-xs font-medium text-[#031927] bg-[#9DD1F1] hover:opacity-90 border border-[#9DD1F1] transition">
           Run Audit Forgery
         </button>
       </div>
@@ -589,7 +589,7 @@
             Attacker accesses centralized logging index to scrape unredacted customer identifiers.
           </p>
         </div>
-        <button onclick="runAttackScenario('plaintext_log')" class="w-full py-1.5 px-3 rounded text-xs font-medium text-slate-200 bg-slate-800 hover:bg-slate-700 border border-slate-700 transition">
+        <button onclick="runAttackScenario('plaintext_log')" class="w-full py-1.5 px-3 rounded text-xs font-medium text-[#031927] bg-[#9DD1F1] hover:opacity-90 border border-[#9DD1F1] transition">
           Run Log PII Scrape
         </button>
       </div>
@@ -606,7 +606,7 @@
             Attacker requests single fields sequentially to bypass single-request thresholds.
           </p>
         </div>
-        <button onclick="runAttackScenario('cumulative')" class="w-full py-1.5 px-3 rounded text-xs font-medium text-slate-200 bg-slate-800 hover:bg-slate-700 border border-slate-700 transition">
+        <button onclick="runAttackScenario('cumulative')" class="w-full py-1.5 px-3 rounded text-xs font-medium text-[#031927] bg-[#9DD1F1] hover:opacity-90 border border-[#9DD1F1] transition">
           Run Cumulative Profiling
         </button>
       </div>
@@ -623,7 +623,7 @@
             Attacker tries to send sensitive records to an unapproved outside service.
           </p>
         </div>
-        <button onclick="runAttackScenario('exfiltration')" class="w-full py-1.5 px-3 rounded text-xs font-medium text-slate-200 bg-slate-800 hover:bg-slate-700 border border-slate-700 transition">
+        <button onclick="runAttackScenario('exfiltration')" class="w-full py-1.5 px-3 rounded text-xs font-medium text-[#031927] bg-[#9DD1F1] hover:opacity-90 border border-[#9DD1F1] transition">
           Run Exfiltration
         </button>
       </div>
@@ -640,7 +640,7 @@
             Attacker disguises values so the detector misses them. Some get through.
           </p>
         </div>
-        <button onclick="runAttackScenario('evasion')" class="w-full py-1.5 px-3 rounded text-xs font-medium text-slate-200 bg-slate-800 hover:bg-slate-700 border border-slate-700 transition">
+        <button onclick="runAttackScenario('evasion')" class="w-full py-1.5 px-3 rounded text-xs font-medium text-[#031927] bg-[#9DD1F1] hover:opacity-90 border border-[#9DD1F1] transition">
           Run Detector Evasion
         </button>
       </div>
@@ -648,7 +648,7 @@
 
     <!-- Attack Result Box -->
     <div id="attack-result-box" class="hidden mt-6 panel rounded-lg p-5 scroll-mt-20">
-      <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-800">
+      <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-700">
         <h3 id="attack-res-title" tabindex="-1" aria-describedby="attack-res-badge" class="text-sm font-semibold text-white outline-none"></h3>
         <span id="attack-res-badge" class="px-2.5 py-0.5 rounded text-xs font-mono font-bold"></span>
       </div>
@@ -679,7 +679,7 @@
   <!-- TAB 3: SYSTEM SPECIFICATIONS -->
   <!-- ============================================================== -->
   <main id="tab-architecture" class="hidden flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-    <div class="pb-3 border-b border-slate-800">
+    <div class="pb-3 border-b border-slate-700">
       <h1 class="text-lg font-semibold text-white">System Specifications & Formal Definitions</h1>
       <p class="text-xs text-slate-400 mt-0.5">Architectural formulas, cryptographic bounds, and policy matrix rules.</p>
     </div>
@@ -739,7 +739,7 @@ Master Key (256-bit Hardware Key Storage)
   <!-- REVEAL, LOGS, EVALUATION (components in shared.js) -->
   <!-- ============================================================== -->
   <main id="tab-reveal" class="hidden s-ink flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-    <div class="mb-5 pb-3 border-b border-slate-800">
+    <div class="mb-5 pb-3 border-b border-slate-700">
       <h1 class="text-lg font-semibold text-white">Reveal</h1>
       <p class="text-xs text-slate-400 mt-0.5">The right service can get a value back. Try it three ways: no key, a key without decrypt rights, then a key with them.</p>
     </div>
@@ -747,7 +747,7 @@ Master Key (256-bit Hardware Key Storage)
   </main>
 
   <main id="tab-logs" class="hidden s-ink flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-    <div class="mb-5 pb-3 border-b border-slate-800">
+    <div class="mb-5 pb-3 border-b border-slate-700">
       <h1 class="text-lg font-semibold text-white">Logs</h1>
       <p class="text-xs text-slate-400 mt-0.5">The audit log records data types and decisions, never the values. Each row's hash includes the hash of the row before it.</p>
     </div>
@@ -755,7 +755,7 @@ Master Key (256-bit Hardware Key Storage)
   </main>
 
   <main id="tab-evaluation" class="hidden s-ink flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-    <div class="mb-5 pb-3 border-b border-slate-800">
+    <div class="mb-5 pb-3 border-b border-slate-700">
       <h1 class="text-lg font-semibold text-white">Evaluation</h1>
     </div>
     <div id="eval-mount"></div>
@@ -766,9 +766,9 @@ Master Key (256-bit Hardware Key Storage)
   <!-- ============================================================== -->
   <script src="/static/shared.js"></script>
   <script>
-    const NAV_ACTIVE = "px-3 py-1.5 rounded text-xs font-medium transition bg-slate-800 text-sky-400 border border-slate-700";
-    const NAV_IDLE = "px-3 py-1.5 rounded text-xs font-medium transition text-slate-400 hover:text-slate-200 hover:bg-slate-800 border border-transparent";
-    const SUB_ACTIVE = "pb-2 text-sky-400 border-b-2 border-sky-400";
+    const NAV_ACTIVE = "px-3 py-1.5 rounded text-xs font-medium transition bg-[#BA1200] text-[#C8E0F4] border border-[#BA1200]";
+    const NAV_IDLE = "px-3 py-1.5 rounded text-xs font-medium transition text-slate-400 hover:text-slate-200 hover:border-[#508AA8] border border-transparent";
+    const SUB_ACTIVE = "pb-2 text-sky-400 border-b-2 border-[#BA1200]";
     const SUB_IDLE = "pb-2 text-slate-400 hover:text-slate-200 border-b-2 border-transparent";
 
     function markCurrent(btn, isCurrent, value) {
@@ -1011,13 +1011,13 @@ Master Key (256-bit Hardware Key Storage)
         reason: 'Permits reversible decryption by authorized internal services via authenticated associated data (AAD).',
       },
       BLOCK: {
-        tone: 'bg-rose-950 text-rose-400 border border-rose-800',
+        tone: 'bg-rose-950 text-[#C8E0F4] border border-rose-800',
         title: "Traffic Blocked: Policy Violation or Exposure Limit",
         desc: "Request rejected by policy. No payload data was returned.",
         egress: "Withheld Payload (Not Transmitted)",
       },
       QUARANTINE: {
-        tone: 'bg-rose-950 text-rose-400 border border-rose-800',
+        tone: 'bg-rose-950 text-[#C8E0F4] border border-rose-800',
         title: "Traffic Quarantined: Policy Violation or Exposure Limit",
         desc: "Request held by policy for manual review. No payload data was returned.",
         egress: "Withheld Payload (Not Transmitted)",
@@ -1026,7 +1026,7 @@ Master Key (256-bit Hardware Key Storage)
 
     function egressBadge(action, raw, protectedPayload) {
       if (action === 'ALLOW') return ["Not Modified", 'text-slate-300 bg-slate-800 border-slate-700'];
-      if (action === 'BLOCK' || action === 'QUARANTINE') return ["Withheld", 'text-rose-400 bg-rose-950/60 border-rose-900/60'];
+      if (action === 'BLOCK' || action === 'QUARANTINE') return ["Withheld", 'text-[#C8E0F4] bg-rose-950 border-rose-900'];
       const unchanged = Object.keys(raw).filter(k => typeof raw[k] === 'string' && raw[k] === protectedPayload[k]);
       return unchanged.length
         ? [`Partly Protected: ${unchanged.join(', ')} unchanged`, 'text-amber-400 bg-amber-950/60 border-amber-900/60']
@@ -1116,7 +1116,7 @@ Master Key (256-bit Hardware Key Storage)
       document.getElementById('attack-res-title').textContent = `Scenario Failed: ${name}`;
       const badge = document.getElementById('attack-res-badge');
       badge.textContent = "FAILED";
-      badge.className = `${ATTACK_BADGE} bg-rose-950 text-rose-400 border border-rose-800`;
+      badge.className = `${ATTACK_BADGE} bg-rose-950 text-[#C8E0F4] border border-rose-800`;
       document.getElementById('attack-res-baseline').textContent = "Not available.";
       document.getElementById('attack-res-ebcp').textContent = "Not available.";
       document.getElementById('attack-res-exp').textContent = "Unable to run this scenario. Check that the server is running and try again.";

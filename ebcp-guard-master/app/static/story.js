@@ -44,7 +44,7 @@ function showGatewayMessage(text) {
 function showGatewayResult(request, analyze, protect) {
   const action = protect.protection_decision;
   const [title, explanation] = VERDICTS[action] || [action, ''];
-  const parts = [chip(action), el('h4', '', title), el('p', '', explanation)];
+  const parts = [el('i', 'crest'), chip(action), el('h4', '', title), el('p', '', explanation)];
 
   const types = [...new Set(analyze.detected_entities.map((e) => e.entity_type))];
   const pills = el('div', 'result-pills');
@@ -123,6 +123,14 @@ const ATTACKS = [
 
 const OUTCOME_TITLE = { PROTECTED: 'The attack failed.', PARTIAL: 'Partly got through.', VULNERABLE: 'It got through.' };
 
+const resultTitle = (data) => {
+  const samples = data.details?.samples;
+  const missed = samples ? samples.filter((s) => !s.matches_found).length : 0;
+  return data.result === 'PARTIAL' && samples
+    ? `Partly got through. ${samples.length - missed} of ${samples.length} found, ${missed} missed.`
+    : OUTCOME_TITLE[data.result] || data.result;
+};
+
 function setAttackButtons(disabled) {
   document.querySelectorAll('.attack').forEach((b) => { b.disabled = disabled; });
 }
@@ -130,10 +138,7 @@ function setAttackButtons(disabled) {
 function openSheet(question, data) {
   $('sheet-chip').replaceChildren(chip(data.result));
   const samples = data.details?.samples;
-  const missed = samples ? samples.filter((s) => !s.matches_found).length : 0;
-  $('sheet-title').textContent = data.result === 'PARTIAL' && samples
-    ? `Partly got through. ${samples.length - missed} of ${samples.length} found, ${missed} missed.`
-    : OUTCOME_TITLE[data.result] || data.result;
+  $('sheet-title').textContent = resultTitle(data);
   $('sheet-question').textContent = question;
   $('sheet-baseline').textContent = data.baseline_outcome;
   $('sheet-guard').textContent = data.ebcp_guard_outcome;
@@ -166,12 +171,14 @@ function closeSheet() {
   $('attack-sheet').close();
 }
 
-async function runAttack(scenario, question, button) {
+async function runAttack(scenario, name, question, button) {
   const list = $('live-stages');
   const pace = motionOk() ? 350 : 0; // the backend finishes in milliseconds; this only makes the steps readable
-  list.hidden = false;
   list.replaceChildren();
+  $('phone-title').textContent = name;
+  $('phone-sheet').hidden = true;
   setAttackButtons(true);
+  lastAttackButton = button;
   try {
     const res = await postJson(`${API}/simulate-attack/stream`, { scenario, tenant_id: DEMO_TENANT }, AbortSignal.timeout(30000));
     if (!res.ok) throw new Error(`The server returned HTTP ${res.status}.`);
@@ -179,19 +186,27 @@ async function runAttack(scenario, question, button) {
     for await (const event of readAttackEvents(res)) {
       if (event.stage === 'error') throw new Error(event.message);
       list.append(el('li', '', `+${event.elapsed_ms} ms  ${event.message}`));
-      relayout();
+      list.scrollTop = list.scrollHeight;
       if (event.stage === 'final_result') result = event.result;
       await new Promise((r) => setTimeout(r, pace));
     }
     if (!result) throw new Error('The server stopped before giving a result.');
-    openSheet(question, result);
+    setAttackButtons(false);
+    // Under 1024px the phone may be off screen, so the full result opens straight away.
+    if (!window.matchMedia('(min-width: 1024px)').matches) { openSheet(question, result); return; }
+    $('ps-chip').replaceChildren(chip(result.result));
+    $('ps-title').textContent = resultTitle(result);
+    $('ps-full').onclick = () => openSheet(question, result);
+    $('phone-sheet').hidden = false;
+    lastAttackButton = $('ps-full');
+    $('ps-full').focus({ preventScroll: true });
   } catch (err) {
     list.append(el('li', '', err.name === 'TimeoutError' ? 'No response after 30 seconds.'
       : err instanceof TypeError ? 'Unable to reach the server.' : err.message));
+    setAttackButtons(false);
     button.focus();
   } finally {
-    setAttackButtons(false);
-    lastAttackButton = button;
+    relayout();
   }
 }
 
@@ -203,10 +218,25 @@ function buildAttacks() {
     const button = el('button', 'attack');
     button.type = 'button';
     button.append(el('strong', '', name), el('span', '', question));
-    button.addEventListener('click', () => runAttack(scenario, question, button));
+    button.addEventListener('click', () => runAttack(scenario, name, question, button));
     item.append(button);
     return item;
   }));
+}
+
+// Fills the phone in Chapter 01 from the live cumulative attack.
+function showExposure({ per_request_analysis: requests, cumulative_analysis: total }) {
+  const fill = (row, type, risk, action) => {
+    row.dataset.risk = risk;
+    row.querySelector('.er-type').textContent = type;
+    row.querySelector('.er-score').textContent = risk;
+    row.querySelector('.chip').replaceWith(chip(action));
+  };
+  [...$('expo-list').children].forEach((row, i) => fill(row, requests[i].entity_types.join(', '), requests[i].risk_score, requests[i].recommended_action));
+  fill($('expo-total'), `${total.risk_level} RISK`, total.risk_score, total.recommended_action);
+  // On the pinned layout, stay on whichever request the scroll has reached.
+  $('expo-score').textContent = [...$('expo-list').children, $('expo-total')].filter((r) => !r.classList.contains('off')).pop().dataset.risk;
+  $('expo-note').textContent = 'The gateway remembers what this customer has already exposed. Added together, the score reaches high risk and the decision changes. These scores came from the live server when this page loaded.';
 }
 
 // Every attack runs on load, so the scoreboard and log comparison are from this server, right now.
@@ -228,6 +258,7 @@ async function loadScoreboard() {
       }
     });
     $('score-note').textContent = `All ${results.length} attacks ran against this server when the page loaded. All data is made up.`;
+    showExposure(results.find((x) => x.scenario === 'cumulative').details);
     const logs = results.find((x) => x.scenario === 'plaintext_log').details;
     $('log-baseline').textContent = logs.baseline_log;
     $('log-protected').textContent = logs.protected_log;
@@ -259,17 +290,32 @@ async function runOwnCheck() {
 }
 
 // ---- Wiring ----
-function flipFace(face) {
-  if (window.gsap && motionOk()) gsap.from(face, { rotateX: -90, duration: .5, ease: 'power2.out', clearProps: 'transform' });
+// The five policy actions. Outputs are in the real format of each action.
+const ANSWERS = {
+  ALLOW: ['amount 75000', '75000'],
+  MASK: ['rohan.gupta@example.in', 'r*********a@example.in'],
+  TOKENIZE: ['+919876543210', 'PHONE_861bccd30551160b6beae1'],
+  ENCRYPT: ['123456789012', '[ENCRYPTED:AES256GCM_…]'],
+  BLOCK: ['payload for untrusted_external', 'nothing is sent'],
+};
+
+function selectAnswer(action) {
+  document.querySelectorAll('[data-totem-name]').forEach((n) => { n.textContent = action; });
+  $('totem-index').textContent = `(${Object.keys(ANSWERS).indexOf(action) + 1})`;
+  [$('totem-title').textContent, $('totem-text').textContent] = VERDICTS[action];
+  [$('totem-in').textContent, $('totem-out').textContent] = ANSWERS[action];
+  document.querySelectorAll('[data-action]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.action === action)));
+  relayout();
 }
 
 const feed = mountFeed($('feed-mount'), { onRender: (rows) => {
   relayout();
   if (window.gsap && motionOk() && rows.length) gsap.from(rows, { opacity: 0, duration: .3, stagger: .015, clearProps: 'opacity' });
 } });
-const reveal = mountReveal($('reveal-mount'), { onAttempt: () => { feed.refresh(); relayout(); }, onReveal: flipFace, onHide: flipFace });
+const reveal = mountReveal($('reveal-mount'), { onAttempt: () => { feed.refresh(); relayout(); } });
 
 document.querySelectorAll('[data-preset]').forEach((b) => b.addEventListener('click', () => selectPreset(b.dataset.preset)));
+document.querySelectorAll('[data-action]').forEach((b) => b.addEventListener('click', () => selectAnswer(b.dataset.action)));
 $('gw-run').addEventListener('click', runGateway);
 $('own-run').addEventListener('click', runOwnCheck);
 $('sheet-close').addEventListener('click', closeSheet);
@@ -295,16 +341,20 @@ function setupMotion() {
 
   // Hero headline
   const heading = document.querySelector('[data-split]');
-  const text = heading.textContent;
-  heading.setAttribute('aria-label', text);
-  heading.innerHTML = '';
-  text.split(' ').forEach((word, i, all) => {
-    const w = el('span', 'word', word);
-    w.setAttribute('aria-hidden', 'true');
-    heading.append(w, i < all.length - 1 ? ' ' : '');
+  heading.setAttribute('aria-label', heading.textContent);
+  [...heading.querySelectorAll('mark'), heading].forEach((holder) => {
+    [...holder.childNodes].filter((n) => n.nodeType === Node.TEXT_NODE).forEach((node) => {
+      const parts = node.textContent.split(/(\s+)/).map((part) => {
+        if (!part.trim()) return part;
+        const w = el('span', 'word', part);
+        w.setAttribute('aria-hidden', 'true');
+        return w;
+      });
+      node.replaceWith(...parts);
+    });
   });
   gsap.from('.word', { y: 40, opacity: 0, duration: .8, stagger: .05, ease: 'power3.out', clearProps: 'all' });
-  gsap.from('.hero .lede, .logline, .cue', { y: 20, opacity: 0, duration: .7, delay: .45, stagger: .1, ease: 'power2.out', clearProps: 'all' });
+  gsap.from('.hero .lede, .ring-stage, .cue', { y: 20, opacity: 0, duration: .7, delay: .45, stagger: .1, ease: 'power2.out', clearProps: 'all' });
 
   const mm = gsap.matchMedia();
 
@@ -313,24 +363,39 @@ function setupMotion() {
     const root = document.documentElement;
     root.classList.add('motion', 'pinned-walk', 'motion-sheet');
 
-    // 1. Hero: each value in the log line changes from raw to protected.
-    const vals = gsap.utils.toArray('.log-before .val');
-    const heroTl = gsap.timeline({ scrollTrigger: { trigger: '#hero', pin: true, start: 'top top', end: '+=120%', scrub: .6 } });
-    vals.forEach((val) => {
-      const raw = val.textContent;
-      val.textContent = '';
-      const rawSpan = el('span', '', raw);
-      const safeSpan = el('span', '', val.dataset.safe);
-      rawSpan.setAttribute('aria-hidden', 'true');
-      safeSpan.setAttribute('aria-hidden', 'true');
-      val.append(rawSpan, safeSpan);
-      gsap.set(safeSpan, { opacity: 0, y: 10 });
-      heroTl.to(rawSpan, { opacity: 0, y: -10, duration: .5 }).to(safeSpan, { opacity: 1, y: 0, duration: .5 }, '<.2');
+    // 1. Hero: the ring turns and each card flips as it passes the front, then the ring collapses into one card.
+    const heroTl = gsap.timeline({ scrollTrigger: { trigger: '#hero', pin: true, start: 'top top', end: '+=260%', scrub: .6 } });
+    heroTl.to('.ring', { rotationY: -360, duration: .72, ease: 'none' }, 0);
+    gsap.utils.toArray('.ring .qinner').forEach((inner, i) => {
+      heroTl.to(inner, { rotationY: 180, duration: .1, ease: 'power1.inOut' }, i * .08);
     });
-    document.querySelector('.log-before').setAttribute('aria-hidden', 'true');
-    heroTl.to({}, { duration: .4 });
+    heroTl.to('.ring', { '--spread': 0, duration: .12, ease: 'power2.in' }, .72)
+      .to('.hero h1, .hero .lede, .cue', { opacity: 0, y: -30, duration: .1 }, .72)
+      .to('.ring', { opacity: 0, duration: .04 }, .86)
+      .fromTo('.qcard-one', { opacity: 0, scale: .7 }, { opacity: 1, scale: 1, duration: .08 }, .86)
+      .to({}, { duration: .06 });
 
-    // 3. Gateway: nine stages, pinned. Ends before the live demo.
+    // 2. Exposure: the giant score climbs behind the phone, request by request.
+    const expoRows = [...gsap.utils.toArray('#expo-list li'), document.getElementById('expo-total')];
+    const expoScore = document.getElementById('expo-score');
+    let expoStep = -1;
+    const setExpo = (i) => {
+      if (i === expoStep) return;
+      expoStep = i;
+      expoRows.forEach((row, n) => row.classList.toggle('off', n > i));
+      expoScore.textContent = expoRows[i].dataset.risk;
+      expoScore.classList.toggle('final', i === expoRows.length - 1);
+      gsap.fromTo(expoScore, { scale: .96 }, { scale: 1, duration: .25 });
+    };
+    setExpo(0);
+    ScrollTrigger.create({
+      trigger: '#expo', pin: true, start: 'top top', end: '+=220%',
+      onUpdate: (self) => setExpo(Math.min(expoRows.length - 1, Math.floor(self.progress * expoRows.length))),
+    });
+    gsap.fromTo('.expo-rule', { scaleX: 0 }, { scaleX: 1, ease: 'none', scrollTrigger: { trigger: '#expo', start: 'top 60%', end: 'top top', scrub: true } });
+    gsap.fromTo('#expo .phone, .stage-screen', { filter: 'blur(8px)' }, { filter: 'blur(0px)', ease: 'none', clearProps: 'filter', scrollTrigger: { trigger: '#expo', start: 'top 70%', end: 'top 10%', scrub: true } });
+
+    // 3. Gateway: nine stages shown on the phone, pinned. Ends before the live demo.
     const stages = gsap.utils.toArray('.stages li');
     const count = document.querySelector('.stage-count');
     const code = document.querySelector('.stage-code');
@@ -341,6 +406,9 @@ function setupMotion() {
       stages.forEach((s, n) => s.classList.toggle('on', n === i));
       count.textContent = `Step ${i + 1} of ${stages.length}`;
       code.textContent = stages[i].querySelector('code').textContent;
+      document.querySelector('.stage-name').textContent = stages[i].querySelector('strong').textContent;
+      document.querySelector('.stage-num').textContent = String(i + 1).padStart(2, '0');
+      document.querySelector('.stage-explain').textContent = stages[i].querySelector('span').textContent;
       gsap.fromTo(code, { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: .3, overwrite: true });
     };
     setStage(0);
@@ -358,8 +426,10 @@ function setupMotion() {
 
     return () => {
       root.classList.remove('motion', 'pinned-walk', 'motion-sheet');
-      vals.forEach((val) => { val.textContent = val.firstChild?.textContent || val.textContent; });
-      document.querySelector('.log-before').removeAttribute('aria-hidden');
+      expoRows.forEach((row) => row.classList.remove('off'));
+      expoScore.classList.remove('final');
+      expoScore.textContent = document.getElementById('expo-total').dataset.risk;
+      expoStep = -1;
       current = -1;
     };
   });
@@ -372,13 +442,15 @@ function setupMotion() {
       clearProps: 'clipPath,opacity',
     });
   });
-  gsap.from('[data-proof] .chip', {
-    y: 16, opacity: 0, stagger: .15, duration: .4,
-    scrollTrigger: { trigger: '.proof', start: 'top 85%', once: true },
-  });
+  gsap.to('.coin', { rotationY: 720, ease: 'none', scrollTrigger: { trigger: '.totem', start: 'top bottom', end: 'bottom top', scrub: true } });
+  gsap.to('.totem', { scale: .92, ease: 'none', scrollTrigger: { trigger: '.totem', start: 'bottom 80%', end: 'bottom 30%', scrub: true } });
+  // The pill drifts across the opening only. Pinned chapters keep text near the bottom edge, where it would cover words.
+  gsap.fromTo('.float-pill', { x: '-28vw' }, { x: '28vw', ease: 'none', scrollTrigger: {
+    start: 0, endTrigger: '#expo', end: 'top bottom', scrub: true, toggleClass: { targets: '.float-pill', className: 'on' },
+  } });
   gsap.from('.attack', {
     y: 20, opacity: 0, stagger: .05, duration: .4, clearProps: 'all',
-    scrollTrigger: { trigger: '#attacks', start: 'top 90%', once: true },
+    scrollTrigger: { trigger: '.break-grid', start: 'top 90%', once: true },
   });
   gsap.fromTo('#reveal', { clipPath: 'inset(9% 0% 0% 0% round 40px 40px 0 0)' }, {
     clipPath: 'inset(0% 0% 0% 0% round 0px 0px 0 0)', ease: 'none',

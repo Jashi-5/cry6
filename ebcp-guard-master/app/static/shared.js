@@ -62,11 +62,19 @@ const pickSealed = (entities) => {
 };
 
 // ---- Reveal: every attempt goes to the real /decrypt. The server decides, this only shows it. ----
-function mountReveal(root, { onAttempt, onReveal, onHide } = {}) {
+function mountReveal(root, { onAttempt } = {}) {
   root.classList.add('kit');
   root.innerHTML = `
     <div class="reveal">
-      <div class="reveal-card"><div class="reveal-face" data-r="face" aria-live="polite"></div></div>
+      <div class="reveal-card" data-r="card">
+        <div class="reveal-front s-ink" data-r="front">
+          <i class="crest"></i>
+          <p class="qcap" data-r="type">No value yet</p>
+          <p class="reveal-title" data-r="title">Locked</p>
+          <div class="reveal-face mono" data-r="face" aria-live="polite"></div>
+          <span class="qpill" data-r="state">Sealed</span>
+        </div>
+      </div>
       <button type="button" class="btn btn-ghost" data-r="seal">Encrypt a sample value</button>
       <p class="note" data-r="meta"></p>
       <div>
@@ -84,6 +92,17 @@ function mountReveal(root, { onAttempt, onReveal, onHide } = {}) {
   const part = (name) => root.querySelector(`[data-r="${name}"]`);
   let sealed = null;
 
+  // Turns the card over to show its patterned back on the way through.
+  function setCard(open) {
+    part('front').classList.toggle('s-ink', !open);
+    part('front').classList.toggle('s-pale', open);
+    part('title').textContent = open ? 'Opened' : 'Locked';
+    part('state').textContent = open ? 'Authorized' : 'Sealed';
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      part('card').animate([{ transform: 'rotateY(360deg)' }, { transform: 'rotateY(0deg)' }], { duration: 800, easing: 'cubic-bezier(.2,.8,.2,1)' });
+    }
+  }
+
   function showSealed() {
     part('face').textContent = sealed ? `[ENCRYPTED:${sealed.cipher_id}]` : 'Nothing encrypted yet.';
     part('hide').hidden = true;
@@ -93,6 +112,7 @@ function mountReveal(root, { onAttempt, onReveal, onHide } = {}) {
     sealed = entity;
     part('seal').hidden = Boolean(entity);
     part('try').disabled = !entity;
+    part('type').textContent = entity ? entity.entity_type : 'No value yet';
     part('meta').textContent = entity ? `${entity.entity_type}, encrypted for ${entity.purpose}, tenant ${DEMO_TENANT}` : '';
     showSealed();
   }
@@ -135,7 +155,7 @@ function mountReveal(root, { onAttempt, onReveal, onHide } = {}) {
         part('face').textContent = data.decrypted_value;
         part('hide').hidden = false;
         logAttempt(200, 'Authorized. Value decrypted and the access recorded in the audit log.');
-        onReveal?.(part('face'));
+        setCard(true);
       } else if (res.status === 401) {
         logAttempt(401, 'Refused: no valid key. The attempt was recorded in the audit log.');
       } else if (res.status === 403) {
@@ -153,7 +173,7 @@ function mountReveal(root, { onAttempt, onReveal, onHide } = {}) {
 
   part('hide').addEventListener('click', () => {
     showSealed();
-    onHide?.(part('face'));
+    setCard(false);
     part('try').focus();
   });
 
@@ -237,6 +257,7 @@ function mountFeed(root, { filter = false, onRender } = {}) {
 // ---- Evaluation: every number comes from GET /evaluation, plus one live attack run. ----
 // Reports hold 4 decimals. Round from those so .7755 shows as .776, not the float's .775.
 const f3 = (n) => (Math.round(Math.round(n * 1e4) / 10) / 1000).toFixed(3).replace(/^0(?=\.)/, '');
+const STAT_SURFACE = ['s-ember', 's-air', 's-ink'];
 const TYPE_ORDER = ['EMAIL', 'PHONE', 'PERSON', 'ACCOUNT_NUMBER', 'UPI_ID', 'PAN', 'AADHAAR'];
 
 async function mountEvaluation(root, { onRender } = {}) {
@@ -262,7 +283,7 @@ async function mountEvaluation(root, { onRender } = {}) {
   const stats = el('div', 'eval-stats');
   names.forEach((name) => {
     const { scores: { micro }, latency } = systems[name];
-    const card = el('section', 'eval-stat');
+    const card = el('section', `eval-stat ${STAT_SURFACE[names.indexOf(name)]}`);
     const f1 = el('span', 'eval-f1', f3(micro.f1));
     f1.dataset.count = micro.f1;
     const dl = el('dl');
@@ -312,7 +333,9 @@ async function mountEvaluation(root, { onRender } = {}) {
   list.append(evasionItem);
   short.append(el('h3', '', 'Where it falls short'), list);
 
-  root.replaceChildren(intro, stats, legend, panels, short);
+  const chart = el('div', 'eval-chart');
+  chart.append(legend, panels);
+  root.replaceChildren(intro, stats, chart, short);
   onRender?.(root);
 
   try {

@@ -27,20 +27,34 @@
   <main>
     <!-- 1. HERO -->
     <section id="hero" class="hero s-ink">
-      <h1 data-split>What leaves your API shouldn’t be what went in.</h1>
+      <h1 data-split>What leaves your API <mark>shouldn’t be</mark> what went in.</h1>
       <p class="lede">EBCP-Guard sits in front of your services, finds sensitive data in each request, and protects it before it travels.</p>
-      <div class="logline mono">
-        <p class="log-label">Application log, real output from the plaintext log attack</p>
-        <p class="log-before"><span class="log-tag">Before</span> [INFO] Payment initiated by <span class="val" data-safe="A. M.">Arjun Mehta</span> (email: <span class="val" data-safe="a*********a@example.com">arjun.mehta@example.com</span>) from account <span class="val" data-safe="********8901">112345678901</span> amount INR 15000</p>
-        <p class="log-after"><span class="log-tag">After</span> [INFO] Payment initiated by A. M. (email: a*********a@example.com) from account ********8901 amount INR 15000</p>
+      <div class="ring-stage">
+        <ul class="ring" role="list" tabindex="0" aria-label="Eight kinds of sensitive data, before and after masking">
+          <li class="qcard" style="--i:0"><div class="qinner"><div class="qface qfront s-ember"><i class="crest"></i><p class="qcap">Email</p><p class="qval mono">rohan.gupta@example.in</p><span class="qpill">Raw</span><p class="qfoot">What went in</p></div><div class="qface qback s-baby"><i class="crest"></i><p class="qcap">Email</p><p class="qval mono">r*********a@example.in</p><span class="qpill">Masked</span><p class="qfoot">What leaves</p></div></div></li>
+          <li class="qcard" style="--i:1"><div class="qinner"><div class="qface qfront s-ember"><i class="crest"></i><p class="qcap">Phone</p><p class="qval mono">+919876543210</p><span class="qpill">Raw</span><p class="qfoot">What went in</p></div><div class="qface qback s-baby"><i class="crest"></i><p class="qcap">Phone</p><p class="qval mono">+91XXXXXX3210</p><span class="qpill">Masked</span><p class="qfoot">What leaves</p></div></div></li>
+          <li class="qcard" style="--i:2"><div class="qinner"><div class="qface qfront s-ember"><i class="crest"></i><p class="qcap">PAN</p><p class="qval mono">ABCPE1234F</p><span class="qpill">Raw</span><p class="qfoot">What went in</p></div><div class="qface qback s-baby"><i class="crest"></i><p class="qcap">PAN</p><p class="qval mono">ABCPE****F</p><span class="qpill">Masked</span><p class="qfoot">What leaves</p></div></div></li>
+          <li class="qcard" style="--i:3"><div class="qinner"><div class="qface qfront s-ember"><i class="crest"></i><p class="qcap">Account number</p><p class="qval mono">123456789012</p><span class="qpill">Raw</span><p class="qfoot">What went in</p></div><div class="qface qback s-baby"><i class="crest"></i><p class="qcap">Account number</p><p class="qval mono">********9012</p><span class="qpill">Masked</span><p class="qfoot">What leaves</p></div></div></li>
+          <li class="qcard" style="--i:4"><div class="qinner"><div class="qface qfront s-ember"><i class="crest"></i><p class="qcap">Aadhaar</p><p class="qval mono">4567 8901 2345</p><span class="qpill">Raw</span><p class="qfoot">What went in</p></div><div class="qface qback s-baby"><i class="crest"></i><p class="qcap">Aadhaar</p><p class="qval mono">XXXX XXXX 2345</p><span class="qpill">Masked</span><p class="qfoot">What leaves</p></div></div></li>
+          <li class="qcard" style="--i:5"><div class="qinner"><div class="qface qfront s-ember"><i class="crest"></i><p class="qcap">UPI ID</p><p class="qval mono">rohan@okhdfc</p><span class="qpill">Raw</span><p class="qfoot">What went in</p></div><div class="qface qback s-baby"><i class="crest"></i><p class="qcap">UPI ID</p><p class="qval mono">r***n@okhdfc</p><span class="qpill">Masked</span><p class="qfoot">What leaves</p></div></div></li>
+          <li class="qcard" style="--i:6"><div class="qinner"><div class="qface qfront s-ember"><i class="crest"></i><p class="qcap">IFSC</p><p class="qval mono">HDFC0001234</p><span class="qpill">Raw</span><p class="qfoot">What went in</p></div><div class="qface qback s-baby"><i class="crest"></i><p class="qcap">IFSC</p><p class="qval mono">HDFC*******</p><span class="qpill">Masked</span><p class="qfoot">What leaves</p></div></div></li>
+          <li class="qcard" style="--i:7"><div class="qinner"><div class="qface qfront s-ember"><i class="crest"></i><p class="qcap">Card number</p><p class="qval mono">4111 1111 1111 1111</p><span class="qpill">Raw</span><p class="qfoot">What went in</p></div><div class="qface qback s-baby"><i class="crest"></i><p class="qcap">Card number</p><p class="qval mono">XXXX XXXX XXXX 1111</p><span class="qpill">Masked</span><p class="qfoot">What leaves</p></div></div></li>
+        </ul>
       </div>
-      <p class="cue">Scroll to see one request go through</p>
+      <article class="qcard-one s-baby">
+        <i class="crest"></i>
+        <p class="qcap">Output of the real masking code</p>
+        <h2 class="qone-title">Same data. Safe to travel.</h2>
+        <p>All made-up values. The gateway can also tokenize, encrypt or block.</p>
+        <p class="qfoot">Next: why one request isn’t the whole story</p>
+      </article>
+      <p class="cue">Scroll to see what comes out</p>
     </section>
 
     <!-- 2. PROBLEM -->
     <section id="problem" class="chapter s-ink">
       <div class="label-row"><span>About the problem</span><span>Chapter 01</span></div>
-      <h2>No single request looks dangerous. Together, they are.</h2>
+      <h2>No single request looks dangerous. <mark>Together, they are.</mark></h2>
       <ol class="rows">
         <li class="row">
           <span class="row-num mono">01</span>
@@ -59,19 +73,27 @@
         </li>
       </ol>
 
-      <div class="proof">
-        <div>
-          <p class="proof-label">Four requests, judged one at a time</p>
-          <div class="proof-chips" data-proof>
-            <span class="chip chip-ALLOW">ALLOW</span>
-            <span class="chip chip-MASK">MASK</span>
-            <span class="chip chip-MASK">MASK</span>
-            <span class="chip chip-MASK">MASK</span>
+      <div class="expo" id="expo">
+        <p class="expo-score" id="expo-score" aria-hidden="true">0.563</p>
+        <div class="phone">
+          <div class="phone-screen s-pale">
+            <div class="phone-status" aria-hidden="true"><span>9:41</span><span>5G</span></div>
+            <p class="phone-logo">EBCP-Guard</p>
+            <p class="phone-title">One customer, four requests</p>
+            <ol class="expo-list" id="expo-list">
+            <li data-risk="0.225"><span class="er-name">Request 1</span><span class="chip chip-ALLOW">ALLOW</span><small class="mono er-type">TRANSACTION_AMOUNT</small><b class="mono er-score">0.225</b></li>
+            <li data-risk="0.3225"><span class="er-name">Request 2</span><span class="chip chip-MASK">MASK</span><small class="mono er-type">IP_ADDRESS</small><b class="mono er-score">0.3225</b></li>
+            <li data-risk="0.361"><span class="er-name">Request 3</span><span class="chip chip-MASK">MASK</span><small class="mono er-type">ACCOUNT_NUMBER</small><b class="mono er-score">0.361</b></li>
+            <li data-risk="0.4335"><span class="er-name">Request 4</span><span class="chip chip-MASK">MASK</span><small class="mono er-type">EMAIL</small><b class="mono er-score">0.4335</b></li>
+            </ol>
+            <div class="expo-total" id="expo-total" data-risk="0.563"><span class="er-name">Judged together</span><span class="chip chip-TOKENIZE">TOKENIZE</span><small class="mono er-type">HIGH RISK</small><b class="mono er-score">0.563</b></div>
+            <div class="phone-tabs" aria-hidden="true"><span class="on">Gateway</span><span>Attacks</span><span>Logs</span></div>
           </div>
         </div>
-        <div>
-          <p class="proof-label">The same four, judged together</p>
-          <div class="proof-chips" data-proof><span class="chip chip-TOKENIZE">TOKENIZE</span></div>
+        <div class="expo-rule"></div>
+        <div class="expo-text">
+          <p><strong>Judged one at a time, these requests look fine.</strong> The first is allowed and the next three only get masked.</p>
+          <p id="expo-note">The gateway remembers what this customer has already exposed. Added together, the score reaches high risk and the decision changes to TOKENIZE. These scores are from the cumulative exposure attack in the test reports.</p>
         </div>
       </div>
 
@@ -88,9 +110,9 @@
 
     <!-- 3. GATEWAY -->
     <section id="gateway" class="s-ink">
-      <div class="walk chapter" data-walk>
+      <div class="walk chapter s-ink" data-walk>
         <div class="label-row"><span>About the gateway</span><span>Chapter 02</span></div>
-        <h2>One request. Nine steps.</h2>
+        <h2>One request. <mark>Nine steps.</mark></h2>
         <div class="walk-grid">
           <ol class="stages">
             <li><strong>Input normalization</strong><span>The request is parsed into a form every later step can read.</span><code>{ "email": "rohan.gupta@example.in", "account_number": "123456789012" }</code></li>
@@ -104,9 +126,40 @@ ACCOUNT_NUMBER  123456789012</code></li>
             <li><strong>Protected output</strong><span>The service downstream receives this instead of the original.</span><code>{ "email": "[ENCRYPTED:AES256GCM_…]", "account_number": "[ENCRYPTED:AES256GCM_…]" }</code></li>
             <li><strong>Audit record</strong><span>Types and decisions are recorded in a hash chain. Original values are not.</span><code>H(i) = HMAC-SHA-256( key, H(i-1) || event )</code></li>
           </ol>
-          <div class="stage-screen" aria-hidden="true">
-            <p class="stage-count mono"></p>
-            <pre class="stage-code mono"></pre>
+          <div class="phone stage-screen" aria-hidden="true">
+            <div class="phone-screen s-pale">
+              <div class="phone-status" aria-hidden="true"><span>9:41</span><span>5G</span></div>
+              <p class="phone-logo">EBCP-Guard</p>
+              <p class="stage-count mono"></p>
+              <p class="phone-title stage-name"></p>
+              <div class="stage-card s-ink"><pre class="stage-code mono"></pre></div>
+              <div class="phone-tabs" aria-hidden="true"><span class="on">Gateway</span><span>Attacks</span><span>Logs</span></div>
+            </div>
+          </div>
+          <div class="stage-side" aria-hidden="true"><p class="stage-num"></p><p class="stage-explain"></p></div>
+        </div>
+      </div>
+
+      <div class="totem chapter" id="answers">
+        <div class="label-row"><span>Five possible answers</span><span class="mono" id="totem-index">(3)</span></div>
+        <div class="totem-stage" aria-hidden="true">
+          <p class="totem-name" data-totem-name>TOKENIZE</p>
+          <div class="coin"><i></i><i></i><i></i><i></i><i></i><i></i><b class="coin-face"><i class="crest"></i></b><b class="coin-face coin-back"><i class="crest"></i></b></div>
+          <p class="totem-name totem-line" data-totem-name>TOKENIZE</p>
+        </div>
+        <div class="totem-body">
+          <h3 id="totem-title">Tokenized</h3>
+          <div>
+            <p id="totem-text">Sensitive values became tokens tied to this tenant, purpose and time period. Tokens cannot be reversed without the secret key.</p>
+            <p class="totem-ex mono"><span id="totem-in">+919876543210</span> → <span id="totem-out">PHONE_861bccd30551160b6beae1</span></p>
+            <p class="note">Example output. Real tokens depend on the server's secret key.</p>
+            <div class="totem-chips" role="group" aria-label="Policy actions">
+              <button type="button" class="btn btn-ghost" data-action="ALLOW" aria-pressed="false">Allow</button>
+              <button type="button" class="btn btn-ghost" data-action="MASK" aria-pressed="false">Mask</button>
+              <button type="button" class="btn btn-ghost" data-action="TOKENIZE" aria-pressed="true">Tokenize</button>
+              <button type="button" class="btn btn-ghost" data-action="ENCRYPT" aria-pressed="false">Encrypt</button>
+              <button type="button" class="btn btn-ghost" data-action="BLOCK" aria-pressed="false">Block</button>
+            </div>
           </div>
         </div>
       </div>
@@ -127,7 +180,7 @@ ACCOUNT_NUMBER  123456789012</code></li>
             <p class="note">Use made-up data only.</p>
             <button type="button" class="btn" id="gw-run">Protect this request</button>
           </div>
-          <article class="result" id="gw-result" aria-live="polite" tabindex="-1">
+          <article class="result s-pale" id="gw-result" aria-live="polite" tabindex="-1">
             <p class="note">Pick a sample and run it. The result appears here.</p>
           </article>
         </div>
@@ -137,16 +190,32 @@ ACCOUNT_NUMBER  123456789012</code></li>
     <!-- 4. BREAK IT -->
     <section id="break" class="chapter s-ink">
       <div class="label-row"><span>About the attacks</span><span>Chapter 03</span></div>
-      <h2>Go on. Try to get it out.</h2>
+      <h2>Go on. <mark>Try to get it out.</mark></h2>
       <dl class="score" id="score" aria-live="polite">
-        <div><dd class="mono" data-score="PROTECTED">–</dd><dt>Protected</dt></div>
-        <div><dd class="mono" data-score="PARTIAL">–</dd><dt>Partly got through</dt></div>
-        <div><dd class="mono" data-score="VULNERABLE">–</dd><dt>Got through</dt></div>
+        <div class="s-baby"><dd class="mono" data-score="PROTECTED">–</dd><dt>Protected</dt></div>
+        <div class="s-air"><dd class="mono" data-score="PARTIAL">–</dd><dt>Partly got through</dt></div>
+        <div class="s-ember"><dd class="mono" data-score="VULNERABLE">–</dd><dt>Got through</dt></div>
       </dl>
       <p class="note" id="score-note">Running all 8 attacks against the live server…</p>
 
-      <ul class="attacks" id="attacks"></ul>
-      <ol class="live-stages" id="live-stages" aria-live="polite" hidden></ol>
+      <div class="break-grid">
+        <ul class="attacks" id="attacks" role="list"></ul>
+        <div class="phone break-phone">
+          <div class="phone-screen s-pale">
+            <div class="phone-status" aria-hidden="true"><span>9:41</span><span>5G</span></div>
+            <p class="phone-logo">EBCP-Guard</p>
+            <p class="phone-title" id="phone-title">Pick an attack</p>
+            <ol class="live-stages" id="live-stages" aria-live="polite" tabindex="0" data-lenis-prevent></ol>
+            <div class="phone-sheet s-ink" id="phone-sheet" role="status" hidden>
+              <span class="grabber"></span>
+              <span id="ps-chip"></span>
+              <p class="ps-title" id="ps-title"></p>
+              <button type="button" class="btn" id="ps-full">Full result</button>
+            </div>
+            <div class="phone-tabs" aria-hidden="true"><span class="on">Gateway</span><span>Attacks</span><span>Logs</span></div>
+          </div>
+        </div>
+      </div>
 
       <div class="own">
         <h3>Try your own disguise</h3>
@@ -168,9 +237,9 @@ ACCOUNT_NUMBER  123456789012</code></li>
     </section>
 
     <!-- 6. LOGS -->
-    <section id="logs" class="chapter s-pale sheet">
+    <section id="logs" class="chapter s-ink sheet">
       <div class="label-row"><span>About the record</span><span>Chapter 05</span></div>
-      <h2>The log knows what happened. It doesn’t know who.</h2>
+      <h2>The log knows what happened. <mark>It doesn’t know who.</mark></h2>
       <div class="compare" id="log-compare">
         <div><h3>An ordinary log</h3><p class="mono" id="log-baseline">Run by the plaintext log attack…</p></div>
         <div><h3>With EBCP-Guard</h3><p class="mono" id="log-protected">Run by the plaintext log attack…</p></div>
@@ -184,7 +253,7 @@ ACCOUNT_NUMBER  123456789012</code></li>
     <!-- 7. EVALUATION -->
     <section id="evaluation" class="chapter s-ink">
       <div class="label-row"><span>About the results</span><span>Chapter 06</span></div>
-      <h2>The numbers, including the bad ones.</h2>
+      <h2>The numbers, <mark>including the bad ones.</mark></h2>
       <div id="eval-mount"></div>
     </section>
 
@@ -221,6 +290,8 @@ ACCOUNT_NUMBER  123456789012</code></li>
     <h4>What this means</h4>
     <p id="sheet-explain"></p>
   </dialog>
+
+  <a class="btn float-pill" href="#try-gateway">Try the live demo</a>
 
   <script src="/static/vendor/gsap.min.js"></script>
   <script src="/static/vendor/ScrollTrigger.min.js"></script>
