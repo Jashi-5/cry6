@@ -1,0 +1,104 @@
+/* Palette and the components both pages share: Reveal, the log feed and Evaluation. */
+@font-face {
+  font-family: 'Danh Da';
+  src: url('/static/fonts/DanhDa-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
+
+:root {
+  --display: 'Danh Da', Impact, 'Arial Narrow', sans-serif;
+  --ember: #BA1200;
+  --ink: #031927;
+  --air: #508AA8;
+  --baby: #9DD1F1;
+  --pale: #C8E0F4;
+  --mono: 'JetBrains Mono', Menlo, Monaco, monospace;
+  --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* A surface sets these. Air only ever appears as text on ink; see the plan's contrast table. */
+.s-ink { --bg: var(--ink); --fg: var(--pale); --muted: var(--air); --muted-panel: var(--baby); --rule: rgba(80, 138, 168, .45); --btn-bg: var(--baby); --btn-fg: var(--ink); --panel: rgba(80, 138, 168, .12); }
+.s-baby { --bg: var(--baby); --fg: var(--ink); --muted: var(--ink); --muted-panel: var(--ink); --rule: rgba(3, 25, 39, .35); --btn-bg: var(--ink); --btn-fg: var(--pale); --panel: rgba(200, 224, 244, .55); }
+.s-pale { --bg: var(--pale); --fg: var(--ink); --muted: var(--ink); --muted-panel: var(--ink); --rule: rgba(3, 25, 39, .3); --btn-bg: var(--ink); --btn-fg: var(--pale); --panel: rgba(157, 209, 241, .45); }
+.s-ember { --bg: var(--ember); --fg: var(--pale); --muted: var(--pale); --muted-panel: var(--pale); --rule: rgba(200, 224, 244, .5); --btn-bg: var(--pale); --btn-fg: var(--ink); --panel: rgba(3, 25, 39, .2); }
+.s-ink, .s-baby, .s-pale, .s-ember { background: var(--bg); color: var(--fg); }
+
+/* Author display rules would otherwise beat the hidden attribute. */
+[hidden] { display: none !important; }
+/* Air falls under 4.5:1 once a panel lightens the ink behind it. */
+.reveal, .result, .attack, .logline, .stage-screen { --muted: var(--muted-panel); }
+::placeholder { color: var(--fg); opacity: .8; }
+
+.kit { font-family: var(--sans); }
+.kit :focus-visible, .btn:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+.mono { font-family: var(--mono); }
+.note { color: var(--muted); font-size: .875rem; line-height: 1.5; }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 22px;
+  border: 1px solid var(--btn-bg); border-radius: 999px; background: var(--btn-bg); color: var(--btn-fg);
+  font: 600 .9375rem var(--sans); cursor: pointer; text-decoration: none; transition: opacity .15s;
+}
+.btn:hover:not(:disabled) { opacity: .85; }
+.btn:disabled { opacity: .55; cursor: not-allowed; }
+.btn-ghost { background: transparent; color: var(--fg); border-color: currentColor; }
+
+.field {
+  width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--fg); border-radius: 10px;
+  background: var(--panel); color: var(--fg); font: .875rem var(--mono);
+}
+
+/* Status chips: the word is always there, so colour is never the only signal. */
+.chip { display: inline-block; padding: 3px 9px; border: 1px solid var(--air); border-radius: 999px; color: var(--fg); font: 600 .6875rem var(--mono); white-space: nowrap; }
+.chip-MASK { background: var(--air); color: var(--ink); }
+.chip-TOKENIZE { background: var(--baby); border-color: var(--baby); color: var(--ink); }
+.chip-ENCRYPT { background: var(--pale); border-color: var(--ink); color: var(--ink); }
+.chip-BLOCK, .chip-QUARANTINE, .chip-VULNERABLE, .chip-DENIED { background: var(--ember); border-color: var(--ember); color: var(--pale); }
+
+/* Reveal */
+.reveal { display: grid; gap: 20px; max-width: 640px; margin: 0 auto; padding: 24px; border: 1px solid var(--rule); border-radius: 22px; background: var(--panel); }
+.reveal-card { perspective: 900px; }
+.reveal-face { padding: 20px; border: 1px solid var(--rule); border-radius: 10px; overflow-wrap: anywhere; font: 600 1rem var(--mono); }
+.reveal-attempts { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; font-size: .875rem; }
+.reveal-attempts li { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.reveal-row { display: flex; flex-wrap: wrap; gap: 10px; }
+
+/* Log feed */
+.feed-scroll { overflow-x: auto; }
+.feed { width: 100%; border-collapse: collapse; font: .8125rem var(--mono); white-space: nowrap; }
+.feed th { padding: 8px 12px 8px 0; font-weight: 600; text-align: left; }
+.feed td { padding: 12px 12px 12px 0; border-top: 1px solid var(--rule); }
+
+/* Evaluation */
+.eval-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--rule); }
+.eval-stat { padding: 24px; border-right: 1px solid var(--rule); }
+.eval-stat:first-child { padding-left: 0; }
+.eval-stat:last-child { border-right: 0; }
+.eval-stat h3 { margin: 0 0 20px; font: 600 1rem var(--sans); }
+.eval-f1 { display: block; font: 700 clamp(2.5rem, 6vw, 4.5rem)/1 var(--mono); }
+.eval-stat dl { display: grid; grid-template-columns: auto auto; justify-content: space-between; gap: 6px 16px; margin: 20px 0 0; font-size: .875rem; }
+.eval-stat dd { margin: 0; font-family: var(--mono); text-align: right; }
+
+.eval-legend { display: flex; flex-wrap: wrap; gap: 8px 20px; margin: 40px 0 16px; padding: 0; list-style: none; font-size: .875rem; }
+.eval-legend li { display: flex; align-items: center; gap: 8px; }
+.eval-swatch { width: 12px; height: 12px; border-radius: 3px; }
+.eval-panels { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 32px 40px; }
+.eval-panel h3 { margin: 0 0 10px; font: 600 .875rem var(--mono); }
+.eval-bar-row { display: grid; grid-template-columns: 1fr 3.25rem; gap: 2px 10px; align-items: center; margin-bottom: 8px; font-size: .75rem; }
+.eval-bar-name { grid-column: 1 / -1; }
+.eval-track { height: 8px; border-bottom: 1px solid var(--rule); }
+.eval-bar { height: 100%; border-radius: 0 4px 4px 0; }
+.eval-bar-value { font-family: var(--mono); text-align: right; }
+.series-0 { background: var(--pale); }
+.series-1 { background: var(--air); }
+.series-2 { background: var(--baby); }
+
+.eval-short { margin-top: 48px; padding: 24px; border: 1px solid var(--rule); border-radius: 10px; }
+.eval-short h3 { margin: 0 0 12px; font: 600 1.125rem var(--sans); }
+.eval-short ul { display: grid; gap: 10px; margin: 0; padding-left: 20px; line-height: 1.5; }
+
+@media (max-width: 767px) {
+  .eval-stats { grid-template-columns: 1fr; }
+  .eval-stat, .eval-stat:first-child { padding: 20px 0; border-right: 0; border-bottom: 1px solid var(--rule); }
+}
