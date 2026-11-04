@@ -143,8 +143,13 @@ def create_application() -> FastAPI:
 
         @app.get("/", include_in_schema=False)
         async def root_ui():
-            """Serve the EBCP-Guard interactive presentation and pitch UI."""
+            """Serve the EBCP-Guard scroll story."""
             return FileResponse(str(static_dir / "index.html"))
+
+        @app.get("/app", include_in_schema=False)
+        async def dashboard_ui():
+            """Serve the working dashboard."""
+            return FileResponse(str(static_dir / "app.html"))
 
     return app
 

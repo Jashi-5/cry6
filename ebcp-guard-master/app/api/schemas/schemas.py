@@ -97,6 +97,9 @@ class EntityProtectionResult(BaseModel):
     protected_value: str | None = None  # token / ciphertext / masked value
     cipher_id: str | None = None        # for encrypted values
     token_id: str | None = None         # for tokenized values
+    # Encrypted values only: what an authorized service needs to call /decrypt.
+    ciphertext_b64: str | None = None
+    purpose: str | None = None
 
 
 # ------------------------------------------------------------------ #
@@ -182,6 +185,9 @@ class DecryptRequest(BaseModel):
         description="Optional and never trusted: identity comes from X-API-Key. A mismatch is refused.",
     )
     tenant_id: str = Field(default="default", max_length=128)
+    # Together with the tenant, these select the key. A wrong value fails GCM authentication.
+    entity_type: str = Field(default="ACCOUNT_NUMBER", pattern=r"^[A-Z_]{1,32}$")
+    purpose: ProcessingPurpose = ProcessingPurpose.PAYMENT_PROCESSING
     justification: str = Field(
         default="",
         max_length=512,
