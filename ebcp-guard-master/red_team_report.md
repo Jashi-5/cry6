@@ -1,5 +1,5 @@
 # EBCP-Guard Red-Team Attack Simulation & Security Evaluation Report
-*Generated: 2026-11-03T03:55:55.460086+00:00*
+*Generated: 2026-11-04T21:27:28.226479+00:00*
 
 | Attack | Objective | Baseline Outcome | EBCP-Guard Outcome | Result |
 |---|---|---|---|---|
@@ -10,7 +10,7 @@
 | **Unauthorized decryption** | Attempt AES-256-GCM decryption without credentials or with altered ciphertext | Without access controls, any party with the ciphertext could attempt decryption.... | Unauthorized attempts blocked via GCM authentication tag. Authorized party succe... | **PROTECTED** |
 | **Audit log tampering** | Modify past audit event and test whether hash-chain/Merkle verification detects it | Without hash chaining, event modification may go undetected.... | Original chain: valid=True. After tampering: valid=False, first failure at seq=3... | **PROTECTED** |
 | **External data exfiltration policy** | Exfiltrate sensitive financial records to unapproved external endpoints | Static rules only check destination whitelist; miss contextual PII sensitivity.... | Decision: BLOCK, blocked=True, reason='Destination 'external_unknown' is not aut... | **PROTECTED** |
-| **Model evasion and uncertainty** | Probe detector with obfuscated and misspelled sensitive identifiers | Simple regex with exact patterns fails on obfuscated input.... | Hybrid detector found matches in 2/5 obfuscated samples. Missed 3 — conservative... | **PARTIAL** |
+| **Model evasion and uncertainty** | Probe detector with obfuscated and misspelled sensitive identifiers | Simple regex with exact patterns fails on obfuscated input.... | Hybrid detector found matches in 4/5 obfuscated samples. Missed 1 — conservative... | **PARTIAL** |
 
 ## Technical Explanations
 
@@ -59,5 +59,5 @@
 ### Model evasion and uncertainty (`evasion`)
 - **Security Result**: `PARTIAL`
 - **Baseline Risk**: Simple regex with exact patterns fails on obfuscated input.
-- **EBCP-Guard Defense**: Hybrid detector found matches in 2/5 obfuscated samples. Missed 3 — conservative policy applied for low-confidence predictions.
+- **EBCP-Guard Defense**: Hybrid detector found matches in 4/5 obfuscated samples. Missed 1 — conservative policy applied for low-confidence predictions.
 - **Mechanism**: Model evasion is a real limitation — no detection system achieves 100% recall. EBCP-Guard mitigates this through: (1) hybrid detection combining GLiNER + regex, (2) conservative handling for low-confidence predictions, (3) fail-closed policy: unclassified sensitive content defaults to TOKENIZE or ENCRYPT. Perfect protection is not claimed — these failure modes are documented.
