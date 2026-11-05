@@ -1,0 +1,115 @@
+/* Palette and the components both pages share: Reveal, the log feed and Evaluation. */
+@font-face {
+  font-family: 'Danh Da';
+  src: url('/static/fonts/DanhDa-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
+
+:root {
+  --display: 'Danh Da', Impact, 'Arial Narrow', sans-serif;
+  --ember: #BA1200;
+  --ink: #031927;
+  --air: #508AA8;
+  --baby: #9DD1F1;
+  --pale: #C8E0F4;
+  --mono: 'JetBrains Mono', Menlo, Monaco, monospace;
+  --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* A surface sets these. Air only ever appears as text on ink; see the plan's contrast table. */
+.s-ink { --bg: var(--ink); --fg: var(--pale); --muted: var(--air); --muted-panel: var(--baby); --accent: var(--baby); --rule: var(--air); --btn-bg: var(--ember); --btn-fg: var(--pale); --panel: rgba(80, 138, 168, .12); }
+.s-air { --bg: var(--air); --fg: var(--ink); --muted: var(--ink); --muted-panel: var(--ink); --accent: var(--ink); --rule: var(--ink); --btn-bg: var(--ink); --btn-fg: var(--pale); --panel: rgba(200, 224, 244, .35); }
+.s-baby { --bg: var(--baby); --fg: var(--ink); --muted: var(--ink); --muted-panel: var(--ink); --accent: var(--ink); --rule: var(--ink); --btn-bg: var(--ember); --btn-fg: var(--pale); --panel: var(--pale); }
+.s-pale { --bg: var(--pale); --fg: var(--ink); --muted: var(--ink); --muted-panel: var(--ink); --accent: var(--ember); --rule: var(--air); --btn-bg: var(--ember); --btn-fg: var(--pale); --panel: var(--baby); }
+.s-ember { --bg: var(--ember); --fg: var(--pale); --muted: var(--pale); --muted-panel: var(--baby); --accent: var(--pale); --rule: var(--pale); --btn-bg: var(--pale); --btn-fg: var(--ink); --panel: var(--ink); }
+.s-ink, .s-air, .s-baby, .s-pale, .s-ember { background: var(--bg); color: var(--fg); }
+
+/* Author display rules would otherwise beat the hidden attribute. */
+[hidden] { display: none !important; }
+/* Air falls under 4.5:1 once a panel lightens the ink behind it. */
+.reveal, .result, .attack { --muted: var(--muted-panel); }
+::placeholder { color: var(--fg); opacity: .8; }
+
+.kit { font-family: var(--sans); }
+.kit :focus-visible, .btn:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+.mono { font-family: var(--mono); }
+.note { color: var(--muted); font-size: .875rem; line-height: 1.5; }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 22px;
+  border: 1px solid var(--btn-bg); border-radius: 999px; background: var(--btn-bg); color: var(--btn-fg);
+  font: 600 .9375rem var(--sans); cursor: pointer; text-decoration: none; transition: opacity .15s;
+}
+.btn:hover:not(:disabled) { opacity: .85; }
+.btn:disabled { opacity: .55; cursor: not-allowed; }
+.btn-ghost { background: transparent; color: var(--fg); border-color: currentColor; }
+
+.field {
+  width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--fg); border-radius: 10px;
+  background: var(--panel); color: var(--fg); font: .875rem var(--mono);
+}
+
+/* Status chips: the word is always there, so colour is never the only signal. */
+.chip { display: inline-block; padding: 3px 9px; border: 1px solid var(--air); border-radius: 999px; color: var(--fg); font: 600 .6875rem var(--mono); white-space: nowrap; }
+.chip-MASK { background: var(--air); color: var(--ink); }
+.chip-TOKENIZE { background: var(--baby); border-color: var(--baby); color: var(--ink); }
+.chip-ENCRYPT { background: var(--pale); border-color: var(--ink); color: var(--ink); }
+.chip-BLOCK, .chip-QUARANTINE, .chip-VULNERABLE, .chip-DENIED { background: var(--ember); border-color: var(--ember); color: var(--pale); }
+
+/* Data card parts, used by the hero ring and Reveal. */
+.crest {
+  display: block; flex: none; width: 28px; height: 28px; background: currentColor;
+  -webkit-mask: var(--crest) center / contain no-repeat; mask: var(--crest) center / contain no-repeat;
+  --crest: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 1 3 4.5V11c0 5.8 3.8 10 9 12 5.2-2 9-6.2 9-12V4.5zm-1.3 15.7-4-4 1.8-1.8 2.2 2.2 5-5 1.8 1.8z'/%3E%3C/svg%3E");
+}
+.qcap { margin: 0; font: 600 .75rem var(--sans); }
+.qpill { display: inline-block; padding: 2px 10px; border: 1px solid currentColor; border-radius: 999px; font: 600 .6875rem var(--mono); }
+
+/* Reveal */
+.reveal { perspective: 1000px; display: grid; gap: 20px; max-width: 640px; margin: 0 auto; padding: 24px; border: 2px solid var(--ink); border-radius: 22px; background: var(--panel); }
+.reveal-card { position: relative; width: min(320px, 100%); margin: 0 auto; transform-style: preserve-3d; }
+.reveal-front { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 10px; min-height: 300px; padding: 24px; border: 1px solid var(--ink); border-radius: 10px; backface-visibility: hidden; }
+.reveal-card::after { content: ''; position: absolute; inset: 0; border-radius: 10px; transform: rotateY(180deg); backface-visibility: hidden; background: repeating-linear-gradient(45deg, var(--ember) 0 14px, var(--ink) 14px 28px); }
+.reveal-title { margin: 0; font: 700 3rem/1 var(--display); text-transform: uppercase; }
+.reveal-face { flex: 1; overflow-wrap: anywhere; font-weight: 600; font-size: 1rem; }
+.reveal-attempts { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; font-size: .875rem; }
+.reveal-attempts li { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.reveal-row { display: flex; flex-wrap: wrap; gap: 10px; }
+
+/* Log feed */
+.feed-scroll { overflow-x: auto; }
+.feed { width: 100%; border-collapse: collapse; font: .8125rem var(--mono); white-space: nowrap; }
+.feed th { padding: 8px 12px 8px 0; color: var(--accent); font-weight: 600; text-align: left; }
+.feed td { padding: 12px 12px 12px 0; border-top: 1px solid var(--rule); }
+
+/* Evaluation */
+.eval-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.eval-stat { padding: 24px; border: 2px solid var(--air); border-radius: 22px; }
+.eval-stat h3 { margin: 0 0 20px; font: 600 1rem var(--sans); }
+.eval-f1 { display: block; font: 700 clamp(2.5rem, 6vw, 4.5rem)/1 var(--mono); }
+.eval-stat dl { display: grid; grid-template-columns: auto auto; justify-content: space-between; gap: 6px 16px; margin: 20px 0 0; font-size: .875rem; }
+.eval-stat dd { margin: 0; font-family: var(--mono); text-align: right; }
+
+.eval-chart { margin-top: 24px; padding: 28px; border-radius: 22px; background: var(--pale); color: var(--ink); --rule: var(--air); }
+.eval-legend { display: flex; flex-wrap: wrap; gap: 8px 20px; margin: 0 0 24px; padding: 0; list-style: none; font-size: .875rem; }
+.eval-legend li { display: flex; align-items: center; gap: 8px; }
+.eval-swatch { width: 12px; height: 12px; border-radius: 3px; }
+.eval-panels { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 32px 40px; }
+.eval-panel h3 { margin: 0 0 10px; font: 600 .875rem var(--mono); }
+.eval-bar-row { display: grid; grid-template-columns: 1fr 3.25rem; gap: 2px 10px; align-items: center; margin-bottom: 8px; font-size: .75rem; }
+.eval-bar-name { grid-column: 1 / -1; }
+.eval-track { height: 10px; border-bottom: 1px solid var(--rule); }
+.eval-bar { height: 100%; border-radius: 0 4px 4px 0; }
+.eval-bar-value { font-family: var(--mono); text-align: right; }
+.series-0 { background: var(--ember); }
+.series-1 { background: var(--air); }
+.series-2 { background: var(--ink); }
+
+.eval-short { margin-top: 24px; padding: 28px; border-radius: 22px; background: var(--baby); color: var(--ink); }
+.eval-short h3 { margin: 0 0 12px; font: 600 1.125rem var(--sans); }
+.eval-short ul { display: grid; gap: 10px; margin: 0; padding-left: 20px; line-height: 1.5; list-style: disc; }
+
+@media (max-width: 767px) {
+  .eval-stats { grid-template-columns: 1fr; }
+}

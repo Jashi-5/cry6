@@ -177,9 +177,33 @@ uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
 ### 5.2 Access Interfaces
-- **Interactive Presentation UI**: Navigate to **`http://127.0.0.1:8000/`** in your browser.
+- **Scroll story with live demos**: Navigate to **`http://127.0.0.1:8000/`** in your browser.
+- **Working dashboard**: Navigate to **`http://127.0.0.1:8000/app`**.
 - **OpenAPI Interactive Documentation (Swagger UI)**: Navigate to **`http://127.0.0.1:8000/docs`**.
 - **Alternative API Reference (ReDoc)**: Navigate to **`http://127.0.0.1:8000/redoc`**.
+
+### 5.3 Prepare the Reveal Demo
+Reveal calls the real `/decrypt`, which refuses everyone until service keys exist. For a local demo, add two made-up keys to `.env`, then restart the server:
+
+```bash
+python3 -c "
+import hashlib, json
+h = lambda k: hashlib.sha256(k.encode()).hexdigest()
+print('SERVICE_API_KEYS=' + json.dumps({
+    'payment_service': {'key_sha256': h('demo-payment-key'), 'tenants': ['demo_bank']},
+    'reporting_service': {'key_sha256': h('demo-reporting-key'), 'tenants': ['demo_bank']},
+}))" >> .env
+```
+
+Then try these in Reveal:
+
+| Key | Result |
+|---|---|
+| None | 401, refused and audited |
+| `demo-reporting-key` | 403, this service may not decrypt |
+| `demo-payment-key` | The original value |
+
+Use these keys for local demos only. With no `DATABASE_URL`, the server uses a local SQLite file. A `.env` copied from `.env.example` points at Postgres instead. Run the app with `APP_ENV=development`, because `/protect`, `/analyze` and the log feed require a key outside it.
 
 ---
 
@@ -190,13 +214,13 @@ The built-in web interface is tailored for clean demonstrations and pitching:
 1. **Structured Input Form**: Enter customer details (Name, Email, Phone, PAN, Account Number, IFSC) without needing to manually construct JSON.
 2. **1-Click Preset Scenarios**:
    - `Core Banking Payment`: Demonstrates **`ENCRYPT`** (AES-256-GCM) for legitimate payment flows.
-   - `Analytics & Marketing`: Demonstrates **`TOKENIZE`** (HMAC-SHA-256) for secondary telemetry destinations.
+   - `Analytics & Marketing`: Demonstrates **`ENCRYPT`** (AES-256-GCM) for high-sensitivity identifiers sent to a secondary destination.
    - `Telemetry & Logs`: Demonstrates **`ENCRYPT`** (AES-256-GCM) when high-sensitivity identifiers reach application logging.
    - `Untrusted Third-Party`: Demonstrates **`BLOCK`** (Quarantine containment) when destination is untrusted.
 3. **Live JSON Ingress Preview**: Automatically constructs and syntax-highlights the raw payload in real-time.
 4. **Execution Pipeline View**: Shows real-time progress across all 7 inspection stages (`Input Normalization`, `Entity Validation`, `Context Classification`, `Purpose Recognition`, `Risk Evaluation`, `Cryptographic Protection`, `Audit Commitment`).
 5. **Side-by-Side Payload Comparison**: Displays raw ingress payload side-by-side with the sanitized egress payload.
-6. **Adversarial Verification Suite**: Interactive tab allowing judges to execute 6 real-world attack vectors (Dictionary lookup, Cross-tenant correlation, Unauthorized decryption, Audit log tampering, Plaintext log scraping, and Slow-leak cumulative profiling).
+6. **Adversarial Verification Suite**: Interactive tab allowing judges to execute 8 attack vectors (Dictionary lookup, Cross-tenant correlation, Unauthorized decryption, Audit log tampering, Plaintext log scraping, Slow-leak cumulative profiling, External exfiltration, and Detector evasion).
 
 ---
 

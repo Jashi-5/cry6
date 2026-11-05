@@ -1,13 +1,41 @@
 """Audit verification endpoint."""
 from datetime import datetime, timezone
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from app.api.schemas.schemas import VerifyAuditRequest, VerifyAuditResponse
-from app.core.auth import ServiceIdentity, require_service, require_tenant
+from app.core.auth import ServiceIdentity, require_service, require_service_outside_development, require_tenant
 from app.cryptography.audit_integrity import verify_chain, build_merkle_tree, GENESIS_HASH
 from app.cryptography.key_manager import get_key_manager
 from app.services.audit_service import checkpoint_failure
 
 router = APIRouter()
+
+
+@router.get("/audit/events")
+async def audit_events(
+    tenant_id: str = Query(default="default", max_length=128),
+    limit: int = Query(default=50, ge=1, le=100),
+    service: ServiceIdentity | None = Depends(require_service_outside_development),
+) -> list[dict]:
+    """Newest audit events for the log feed. An allow-list, so new metadata stays private by default."""
+    from app.database.models import AuditEvent
+
+    if service is not None:
+        require_tenant(service, tenant_id)
+
+    events = await AuditEvent.filter(tenant_id=tenant_id).order_by("-sequence_number").limit(limit)
+    return [
+        {
+            "sequence_number": e.sequence_number,
+            "event_type": e.event_type,
+            "entity_types": e.safe_metadata.get("entity_types_detected", []),
+            "sensitivity_class": e.safe_metadata.get("sensitivity_class"),
+            "protection_action": e.safe_metadata.get("protection_action"),
+            "risk_score": e.safe_metadata.get("risk_score"),
+            "created_at": e.created_at.isoformat(),
+            "hash_prefix": e.current_hash[:12],
+        }
+        for e in events
+    ]
 
 @router.post("/verify-audit", response_model=VerifyAuditResponse)
 async def verify_audit(

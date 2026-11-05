@@ -1,0 +1,1293 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EBCP-Guard: Dashboard</title>
+  <link rel="stylesheet" href="/static/shared.css">
+  <link rel="icon" href="data:,">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          // The existing classes keep working; every shade now resolves to the palette or a tint of it.
+          colors: {
+            white: '#C8E0F4',
+            slate: { 200: '#C8E0F4', 300: '#C8E0F4', 400: '#9DD1F1', 500: '#9DD1F1', 600: '#508AA8', 700: '#508AA8', 800: '#031927', 900: '#031927' },
+            sky: { 300: '#9DD1F1', 400: '#9DD1F1', 500: '#9DD1F1', 700: '#BA1200', 800: '#508AA8', 950: '#031927' },
+            emerald: { 400: '#9DD1F1', 500: '#9DD1F1', 800: '#508AA8', 900: '#508AA8', 950: '#031927' },
+            amber: { 400: '#C8E0F4', 500: '#C8E0F4', 800: '#508AA8', 900: '#508AA8', 950: '#031927' },
+            rose: { 400: '#C8E0F4', 500: '#BA1200', 800: '#BA1200', 900: '#BA1200', 950: '#BA1200' },
+          },
+          fontFamily: {
+            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+            mono: ['JetBrains Mono', 'Menlo', 'Monaco', 'Courier New', 'monospace'],
+          },
+        }
+      }
+    }
+  </script>
+  <style>
+    :root {
+      color-scheme: dark;
+    }
+    body {
+      background-color: #031927;
+      color: #C8E0F4;
+    }
+    .panel {
+      background-color: #031927;
+      border: 1px solid #508AA8;
+    }
+    .panel-subtle {
+      background-color: #031927;
+      border: 1px solid #508AA8;
+    }
+    .form-input {
+      background-color: #031927;
+      border: 1px solid #508AA8;
+      color: #C8E0F4;
+      transition: border-color 0.15s ease-in-out;
+    }
+    .form-input:focus {
+      border-color: #9DD1F1;
+      outline: 2px solid #9DD1F1;
+      outline-offset: -1px;
+    }
+    pre, code {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .stage-spinner {
+      display: inline-block;
+      width: 0.75rem;
+      height: 0.75rem;
+      border: 2px solid #508AA8;
+      border-top-color: #9DD1F1;
+      border-radius: 50%;
+      animation: stage-spin 0.8s linear infinite;
+    }
+    @keyframes stage-spin {
+      to { transform: rotate(360deg); }
+    }
+    main h1 { font-family: var(--display); font-size: 2rem !important; line-height: 1.1; letter-spacing: .01em; text-transform: uppercase; }
+    main.tab-in { animation: tab-in .15s ease-out; }
+    @keyframes tab-in { from { opacity: 0; } }
+    @media (prefers-reduced-motion: reduce) {
+      main.tab-in { animation: none; }
+      .stage-spinner { animation: none; }
+      .stage-bar { transition: none !important; }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased">
+
+  <!-- ============================================================== -->
+  <!-- TOP NAVIGATION BAR -->
+  <!-- ============================================================== -->
+  <header class="border-b border-slate-700 bg-slate-900 sm:sticky sm:top-0 sm:z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 min-h-14 py-2 flex flex-wrap items-center justify-between gap-2">
+      
+      <!-- Logo & System Meta -->
+      <div class="flex items-center space-x-3">
+        <div class="w-7 h-7 rounded bg-slate-800 border border-slate-700 flex items-center justify-center font-mono font-bold text-xs text-sky-400">
+          EG
+        </div>
+        <div class="flex items-baseline space-x-2">
+          <span class="font-semibold text-sm tracking-tight text-white">EBCP-Guard</span>
+          <span class="text-[11px] text-slate-400 font-mono">v0.1.0</span>
+          <span class="hidden sm:inline text-[11px] text-slate-600" aria-hidden="true">|</span>
+          <span class="hidden sm:inline text-[11px] text-slate-400">Financial API Privacy Gateway</span>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="flex flex-wrap gap-1">
+        <button id="nav-btn-gateway" aria-current="page" onclick="switchTab('gateway')" class="px-3 py-1.5 rounded text-xs font-medium transition bg-[#BA1200] text-[#C8E0F4] border border-[#BA1200]">
+          Gateway
+        </button>
+        <button id="nav-btn-hacker" onclick="switchTab('hacker')" class="px-3 py-1.5 rounded text-xs font-medium transition text-slate-400 hover:text-slate-200 hover:border-[#508AA8] border border-transparent">
+          Break It
+        </button>
+        <button id="nav-btn-reveal" onclick="switchTab('reveal')" class="px-3 py-1.5 rounded text-xs font-medium transition text-slate-400 hover:text-slate-200 hover:border-[#508AA8] border border-transparent">
+          Reveal
+        </button>
+        <button id="nav-btn-logs" onclick="switchTab('logs')" class="px-3 py-1.5 rounded text-xs font-medium transition text-slate-400 hover:text-slate-200 hover:border-[#508AA8] border border-transparent">
+          Logs
+        </button>
+        <button id="nav-btn-evaluation" onclick="switchTab('evaluation')" class="px-3 py-1.5 rounded text-xs font-medium transition text-slate-400 hover:text-slate-200 hover:border-[#508AA8] border border-transparent">
+          Evaluation
+        </button>
+        <button id="nav-btn-architecture" onclick="switchTab('architecture')" class="px-3 py-1.5 rounded text-xs font-medium transition text-slate-400 hover:text-slate-200 hover:border-[#508AA8] border border-transparent">
+          Specs
+        </button>
+      </nav>
+
+      <!-- System Connectivity -->
+      <div class="flex items-center space-x-2 text-[11px] font-mono text-slate-400">
+        <a href="/" class="underline hover:text-slate-200 mr-1">Back to the story</a>
+        <span id="gateway-dot" class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+        <span id="gateway-status">Checking Gateway…</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============================================================== -->
+  <!-- TAB 1: GATEWAY INTERCEPTOR -->
+  <!-- ============================================================== -->
+  <main id="tab-gateway" class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+    <!-- Scenario Preset Selectors -->
+    <div class="mb-5 flex flex-wrap items-center gap-2 pb-4 border-b border-slate-700/80">
+      <span class="text-xs font-medium text-slate-400 uppercase tracking-wider mr-2">Preset Scenarios:</span>
+      <button onclick="loadSample('payment')" class="text-xs px-3 py-1 rounded bg-slate-800/90 hover:border-[#9DD1F1] text-slate-200 border border-slate-700 font-medium transition">
+        Core Banking Payment <span class="text-emerald-400 font-mono text-[11px]">(Expected: ENCRYPT)</span>
+      </button>
+      <button onclick="loadSample('marketing')" class="text-xs px-3 py-1 rounded bg-slate-800/90 hover:border-[#9DD1F1] text-slate-200 border border-slate-700 font-medium transition">
+        Analytics & Marketing <span class="text-sky-400 font-mono text-[11px]">(Expected: ENCRYPT)</span>
+      </button>
+      <button onclick="loadSample('log')" class="text-xs px-3 py-1 rounded bg-slate-800/90 hover:border-[#9DD1F1] text-slate-200 border border-slate-700 font-medium transition">
+        Telemetry & Logs <span class="text-amber-400 font-mono text-[11px]">(Expected: ENCRYPT)</span>
+      </button>
+      <button onclick="loadSample('blacklisted')" class="text-xs px-3 py-1 rounded bg-slate-800/90 hover:border-[#9DD1F1] text-slate-200 border border-slate-700 font-medium transition">
+        Untrusted Third-Party <span class="text-rose-400 font-mono text-[11px]">(Expected: BLOCK)</span>
+      </button>
+    </div>
+
+    <!-- WORKSPACE VIEW: Form + JSON Preview -->
+    <div id="view-form" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+      <!-- Left Column: Structured Form Input -->
+      <div class="lg:col-span-7 panel rounded-lg p-5">
+        <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-700">
+          <div>
+            <h2 class="text-sm font-semibold text-white">Ingress Transaction Parameters</h2>
+            <p class="text-xs text-slate-400 mt-0.5">Parameters will be normalized into an API payload before inspection.</p>
+          </div>
+          <span class="text-[11px] font-mono text-slate-400 bg-slate-800 px-2 py-0.5 rounded border border-slate-700">Client Ingress</span>
+        </div>
+
+        <div class="space-y-3.5 text-xs">
+          <!-- Row 1: Name & Email -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div>
+              <label for="input-name" class="block font-medium text-slate-300 mb-1">Customer Full Name</label>
+              <input type="text" id="input-name" value="Rohan Gupta" oninput="updateJsonPreview()" class="w-full form-input rounded px-3 py-2 text-base sm:text-sm">
+            </div>
+            <div>
+              <label for="input-email" class="block font-medium text-slate-300 mb-1">Email Address</label>
+              <input type="email" id="input-email" value="rohan.gupta@example.in" oninput="updateJsonPreview()" class="w-full form-input rounded px-3 py-2 text-base sm:text-sm">
+            </div>
+          </div>
+
+          <!-- Row 2: Phone & PAN -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div>
+              <label for="input-phone" class="block font-medium text-slate-300 mb-1">Phone Number (+91)</label>
+              <input type="text" id="input-phone" value="+919876543210" oninput="updateJsonPreview()" class="w-full form-input rounded px-3 py-2 text-base sm:text-sm">
+            </div>
+            <div>
+              <label for="input-pan" class="block font-medium text-slate-300 mb-1">
+                Permanent Account Number (PAN)
+                <span class="text-xs text-slate-400 font-mono">(4th char entity type: 'P')</span>
+              </label>
+              <input type="text" id="input-pan" value="ABCPE1234F" oninput="updateJsonPreview()" class="w-full form-input rounded px-3 py-2 text-base sm:text-sm uppercase font-mono">
+            </div>
+          </div>
+
+          <!-- Row 3: Account & IFSC -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div>
+              <label for="input-account" class="block font-medium text-slate-300 mb-1">Bank Account Number</label>
+              <input type="text" id="input-account" value="123456789012" oninput="updateJsonPreview()" class="w-full form-input rounded px-3 py-2 text-base sm:text-sm font-mono">
+            </div>
+            <div>
+              <label for="input-ifsc" class="block font-medium text-slate-300 mb-1">
+                IFSC Code
+                <span class="text-xs text-slate-400 font-mono">(5th char '0')</span>
+              </label>
+              <input type="text" id="input-ifsc" value="HDFC0001234" oninput="updateJsonPreview()" class="w-full form-input rounded px-3 py-2 text-base sm:text-sm uppercase font-mono">
+            </div>
+          </div>
+
+          <!-- Row 4: Aadhaar & Amount -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div>
+              <label for="input-aadhaar" class="block font-medium text-slate-300 mb-1">Aadhaar Number (Optional)</label>
+              <input type="text" id="input-aadhaar" value="4567 8901 2345" oninput="updateJsonPreview()" class="w-full form-input rounded px-3 py-2 text-base sm:text-sm font-mono">
+            </div>
+            <div>
+              <label for="input-amount" class="block font-medium text-slate-300 mb-1">Transaction Amount (INR)</label>
+              <input type="number" id="input-amount" value="75000" oninput="updateJsonPreview()" class="w-full form-input rounded px-3 py-2 text-base sm:text-sm">
+            </div>
+          </div>
+
+          <!-- Context Configuration -->
+          <div class="pt-2 border-t border-slate-700">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <div>
+                <label for="select-endpoint" class="block font-medium text-slate-300 mb-1">Target Endpoint</label>
+                <select id="select-endpoint" onchange="updateJsonPreview()" class="w-full form-input rounded px-3 py-2 text-base sm:text-xs">
+                  <option value="/api/v1/payments">POST /api/v1/payments</option>
+                  <option value="/api/v1/customer/profile">POST /api/v1/customer/profile</option>
+                  <option value="/api/v1/analytics/events">POST /api/v1/analytics/events</option>
+                  <option value="/api/v1/auth/logs">POST /api/v1/auth/logs</option>
+                </select>
+              </div>
+              <div>
+                <label for="select-destination" class="block font-medium text-slate-300 mb-1">Destination Service</label>
+                <select id="select-destination" onchange="updateJsonPreview()" class="w-full form-input rounded px-3 py-2 text-base sm:text-xs">
+                  <option value="internal_payment">internal_payment (Core Banking)</option>
+                  <option value="marketing_crm">marketing_crm (Secondary Telemetry)</option>
+                  <option value="third_party_analytics">third_party_analytics (Analytics Partner)</option>
+                  <option value="application_logs">application_logs (Application Logging)</option>
+                  <option value="untrusted_external">untrusted_external (Blacklisted Destination)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="mt-5 pt-4 border-t border-slate-700">
+          <button id="btn-inspect" onclick="startInspection()" class="w-full py-2.5 px-4 rounded bg-[#BA1200] hover:opacity-90 font-semibold text-[#C8E0F4] text-xs tracking-wide transition flex items-center justify-center space-x-2">
+            <span>Process & Inspect API Traffic</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Right Column: Live API Request Preview -->
+      <div class="lg:col-span-5 flex flex-col panel rounded-lg p-5">
+        <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-700">
+          <h2 class="text-sm font-semibold text-slate-200">Constructed API Ingress Payload</h2>
+          <span class="text-xs font-mono text-slate-400">JSON Schema</span>
+        </div>
+        <p class="text-xs text-slate-400 mb-3">
+          This payload represents raw ingress data prior to EBCP-Guard policy enforcement.
+        </p>
+
+        <!-- Syntax-highlighted live preview -->
+        <div class="flex-1 panel-subtle rounded p-3 font-mono text-xs text-slate-300 overflow-auto max-h-[460px]">
+          <pre id="json-preview-text" class="whitespace-pre-wrap break-all"></pre>
+        </div>
+
+        <div class="mt-3 text-[11px] text-slate-400 font-mono">
+          Gateway Mode: Active Inline Filter
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- INSPECTION PIPELINE PROGRESS (No Emojis, Clean Technical Flow) -->
+    <!-- ============================================================== -->
+    <div id="view-loading" class="hidden panel rounded-lg p-6 max-w-2xl mx-auto my-6">
+      <div class="mb-5 pb-3 border-b border-slate-700 flex items-center justify-between">
+        <div>
+          <h2 id="loading-title" tabindex="-1" class="text-sm font-semibold text-white outline-none">Execution Pipeline</h2>
+          <p class="text-xs text-slate-400 mt-0.5">Evaluating contextual privacy constraints and generating cryptographic proofs.</p>
+        </div>
+        <div class="w-4 h-4 border-2 border-sky-400 border-t-transparent rounded-full motion-safe:animate-spin"></div>
+      </div>
+
+      <div class="space-y-2 font-mono text-xs">
+        <div id="pipe-step-1" class="p-2.5 rounded panel-subtle flex items-center justify-between">
+          <span class="text-slate-300">1. Schema Normalization & Key Extraction</span>
+          <span class="pipe-status text-slate-400">Pending</span>
+        </div>
+        <div id="pipe-step-2" class="p-2.5 rounded panel-subtle flex items-center justify-between">
+          <span class="text-slate-300">2. Deterministic Entity Extraction & Checksum Validation</span>
+          <span class="pipe-status text-slate-400">Pending</span>
+        </div>
+        <div id="pipe-step-3" class="p-2.5 rounded panel-subtle flex items-center justify-between">
+          <span class="text-slate-300">3. Contextual Sensitivity Classification (Classes S0–S4)</span>
+          <span class="pipe-status text-slate-400">Pending</span>
+        </div>
+        <div id="pipe-step-4" class="p-2.5 rounded panel-subtle flex items-center justify-between">
+          <span class="text-slate-300">4. API Purpose Intent Recognition & Service Trust Scoring</span>
+          <span class="pipe-status text-slate-400">Pending</span>
+        </div>
+        <div id="pipe-step-5" class="p-2.5 rounded panel-subtle flex items-center justify-between">
+          <span class="text-slate-300">5. Cumulative Exposure Risk Function Evaluation R(t)</span>
+          <span class="pipe-status text-slate-400">Pending</span>
+        </div>
+        <div id="pipe-step-6" class="p-2.5 rounded panel-subtle flex items-center justify-between">
+          <span class="text-slate-300">6. Policy Decision Engine & Cryptographic Transformation</span>
+          <span class="pipe-status text-slate-400">Pending</span>
+        </div>
+        <div id="pipe-step-7" class="p-2.5 rounded panel-subtle flex items-center justify-between">
+          <span class="text-slate-300">7. SHA-256 Audit Trail Commitment</span>
+          <span class="pipe-status text-slate-400">Pending</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- INSPECTION FAILURE -->
+    <!-- ============================================================== -->
+    <div id="view-error" class="hidden panel rounded-lg p-6 max-w-2xl mx-auto my-6">
+      <h2 id="error-title" tabindex="-1" aria-describedby="error-message" class="text-sm font-semibold text-white outline-none">Unable to Inspect Request</h2>
+      <p id="error-message" class="text-xs text-slate-300 mt-1"></p>
+      <div class="flex flex-wrap gap-2 mt-4">
+        <button onclick="startInspection()" class="px-3.5 py-1.5 rounded bg-[#BA1200] hover:opacity-90 text-xs font-semibold text-[#C8E0F4] transition">Try Again</button>
+        <button onclick="resetToForm()" class="px-3.5 py-1.5 rounded bg-slate-800 hover:border-[#9DD1F1] text-xs font-medium text-slate-300 border border-slate-700 transition">Back to Form</button>
+      </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- RESULTS & EXPLAINABILITY SCREEN -->
+    <!-- ============================================================== -->
+    <div id="view-results" class="hidden space-y-6">
+
+      <!-- Decision Status Header -->
+      <div id="result-hero" class="panel rounded-lg p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="text-xs font-mono uppercase text-slate-400">Policy Decision:</span>
+            <span id="result-action-badge" class="px-2.5 py-0.5 rounded text-xs font-mono font-bold"></span>
+          </div>
+          <h3 id="result-hero-title" tabindex="-1" aria-describedby="result-action-badge result-hero-desc" class="text-base font-semibold text-white mt-1 outline-none"></h3>
+          <p id="result-hero-desc" class="text-xs text-slate-400 mt-0.5"></p>
+        </div>
+
+        <button onclick="resetToForm()" class="px-3.5 py-1.5 rounded bg-slate-800 hover:border-[#9DD1F1] text-xs font-medium text-slate-300 border border-slate-700 transition">
+          Process New Request
+        </button>
+      </div>
+
+      <!-- Side-by-Side Payload Comparison -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Original Ingress -->
+        <div class="panel rounded-lg p-4">
+          <div class="flex items-center justify-between mb-2 pb-2 border-b border-slate-700">
+            <span class="text-xs font-medium text-slate-300">Raw Ingress Payload (Intercepted)</span>
+            <span class="text-xs font-mono text-rose-400 bg-rose-950/60 px-2 py-0.5 rounded border border-rose-900/60">Plaintext PII</span>
+          </div>
+          <div class="panel-subtle rounded p-3 font-mono text-xs text-slate-300 max-h-72 overflow-auto">
+            <pre id="result-original-payload"></pre>
+          </div>
+        </div>
+
+        <!-- Sanitized Egress -->
+        <div class="panel rounded-lg p-4">
+          <div class="flex items-center justify-between gap-2 mb-2 pb-2 border-b border-slate-700">
+            <span id="result-protected-title" class="text-xs font-medium text-slate-300"></span>
+            <span id="result-protected-badge" class="text-xs font-mono px-2 py-0.5 rounded border"></span>
+          </div>
+          <div class="panel-subtle rounded p-3 font-mono text-xs text-sky-300 max-h-72 overflow-auto">
+            <pre id="result-protected-payload"></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- Explainability Panel -->
+      <div class="panel rounded-lg p-5">
+        <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3 pb-2 border-b border-slate-700">
+          Component Breakdown & Audit Proofs
+        </h4>
+
+        <!-- Internal Subtabs -->
+        <div class="flex flex-wrap gap-x-6 border-b border-slate-700 mb-4 text-xs font-medium">
+          <button id="exp-btn-nlp" aria-current="true" onclick="switchExpTab('nlp')" class="pb-2 text-sky-400 border-b-2 border-sky-400">Entity & Context Analysis</button>
+          <button id="exp-btn-crypto" onclick="switchExpTab('crypto')" class="pb-2 text-slate-400 hover:text-slate-200 border-b-2 border-transparent">Cryptographic Specification</button>
+          <button id="exp-btn-risk" onclick="switchExpTab('risk')" class="pb-2 text-slate-400 hover:text-slate-200 border-b-2 border-transparent">Exposure Risk Formula</button>
+          <button id="exp-btn-audit" onclick="switchExpTab('audit')" class="pb-2 text-slate-400 hover:text-slate-200 border-b-2 border-transparent">Audit Trail Hash Chain</button>
+        </div>
+
+        <!-- Subtab 1: NLP -->
+        <div id="exp-view-nlp" class="space-y-3 text-xs">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 font-mono">
+            <div class="p-3 rounded panel-subtle">
+              <span class="text-slate-400 block text-[11px] mb-1">Sensitivity Class</span>
+              <span id="exp-sens-class" class="text-sm font-semibold text-white"></span>
+            </div>
+            <div class="p-3 rounded panel-subtle">
+              <span class="text-slate-400 block text-[11px] mb-1">Model Confidence</span>
+              <span id="exp-sens-conf" class="text-sm font-semibold text-sky-400"></span>
+            </div>
+            <div class="p-3 rounded panel-subtle">
+              <span class="text-slate-400 block text-[11px] mb-1">Operational Purpose</span>
+              <span id="exp-purpose" class="text-sm font-semibold text-emerald-400"></span>
+            </div>
+          </div>
+
+          <div>
+            <span class="font-medium text-slate-300 block mb-1.5 text-xs">Detected Entity Spans & Validation Checks:</span>
+            <div id="exp-entities-list" class="space-y-1 font-mono text-[11px]"></div>
+          </div>
+        </div>
+
+        <!-- Subtab 2: Crypto -->
+        <div id="exp-view-crypto" class="hidden space-y-3 text-xs">
+          <div class="p-3.5 rounded panel-subtle space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-medium text-slate-200">Applied Algorithm:</span>
+              <span id="exp-crypto-type" class="font-mono text-sky-400 font-semibold"></span>
+            </div>
+            <p id="exp-crypto-reason" class="text-slate-400 text-xs leading-relaxed"></p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 font-mono text-[11px]">
+            <div class="p-2.5 rounded panel-subtle">
+              <span class="text-slate-400 block mb-0.5">Key Hierarchy</span>
+              <span class="text-slate-300">HKDF-SHA-256 (Master ➔ Tenant ➔ Purpose ➔ Epoch)</span>
+            </div>
+            <div class="p-2.5 rounded panel-subtle">
+              <span class="text-slate-400 block mb-0.5">Correlation Bound</span>
+              <span class="text-slate-300">Uncorrelated across tenant boundaries</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Subtab 3: Risk Math -->
+        <div id="exp-view-risk" class="hidden space-y-3 text-xs">
+          <div class="p-3.5 rounded panel-subtle">
+            <span class="font-medium text-slate-200 block mb-1">Exposure Risk Formulation:</span>
+            <div class="font-mono text-sky-300 text-xs mb-3">R(t) = 0.35·S(t) + 0.30·C(t) + 0.20·L(t) + 0.15·D(t)</div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center font-mono">
+              <div class="p-2 rounded bg-slate-900 border border-slate-700">
+                <span class="text-slate-400 block text-xs">Sensitivity S(t)</span>
+                <span id="exp-math-s" class="font-bold text-white"></span>
+              </div>
+              <div class="p-2 rounded bg-slate-900 border border-slate-700">
+                <span class="text-slate-400 block text-xs">Cumulative C(t)</span>
+                <span id="exp-math-c" class="font-bold text-white"></span>
+              </div>
+              <div class="p-2 rounded bg-slate-900 border border-slate-700">
+                <span class="text-slate-400 block text-xs">Linkability L(t)</span>
+                <span id="exp-math-l" class="font-bold text-white"></span>
+              </div>
+              <div class="p-2 rounded bg-slate-900 border border-slate-700">
+                <span class="text-slate-400 block text-xs">Destination D(t)</span>
+                <span id="exp-math-d" class="font-bold text-white"></span>
+              </div>
+            </div>
+
+            <div class="mt-3 pt-2 border-t border-slate-700 flex justify-between items-center font-mono text-xs">
+              <span class="text-slate-400">Total Computed Risk Score:</span>
+              <span id="exp-math-total" class="font-bold text-sky-400 text-sm"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Subtab 4: Audit -->
+        <div id="exp-view-audit" class="hidden space-y-3 text-xs font-mono">
+          <div class="p-3.5 rounded panel-subtle space-y-2">
+            <div>
+              <span class="text-slate-400 block mb-0.5 text-[11px]">Audit Event Identifier</span>
+              <span id="exp-audit-id" class="text-slate-200"></span>
+            </div>
+            <div>
+              <span class="text-slate-400 block mb-0.5 text-[11px]">Forward-Linked SHA-256 Hash</span>
+              <span id="exp-audit-hash" class="text-sky-300 break-all p-2 rounded bg-slate-900 block border border-slate-700 text-[11px]"></span>
+            </div>
+            <p class="text-slate-400 text-[11px] font-sans pt-1">
+              Tamper Evidence: Alteration of previous rows invalidates all subsequent hashes during re-verification.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+
+  <!-- ============================================================== -->
+  <!-- TAB 2: ADVERSARIAL VERIFICATION SUITE -->
+  <!-- ============================================================== -->
+  <main id="tab-hacker" class="hidden flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div class="mb-5 pb-3 border-b border-slate-700">
+      <h1 class="text-lg font-semibold text-white">Break It</h1>
+      <p class="text-xs text-slate-400 mt-0.5">
+        Execute controlled penetration scenarios against synthetic financial records to benchmark baseline DLP against EBCP-Guard.
+      </p>
+    </div>
+
+    <!-- Attack Selection Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+      <!-- 1. Dictionary Attack -->
+      <div class="panel rounded-lg p-4 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-300">Vector 01</span>
+            <span class="text-xs text-slate-400 font-mono">Offline Lookup</span>
+          </div>
+          <h3 class="text-sm font-semibold text-white mb-1">Precomputed Dictionary Attack</h3>
+          <p class="text-xs text-slate-400 mb-3">
+            Attacker tests precomputed rainbow tables against customer pseudonyms.
+          </p>
+        </div>
+        <button onclick="runAttackScenario('dict_attack')" class="w-full py-1.5 px-3 rounded text-xs font-medium text-[#031927] bg-[#9DD1F1] hover:opacity-90 border border-[#9DD1F1] transition">
+          Run Dictionary Attack
+        </button>
+      </div>
+
+      <!-- 2. Cross-Tenant Correlation -->
+      <div class="panel rounded-lg p-4 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-300">Vector 02</span>
+            <span class="text-xs text-slate-400 font-mono">Cross-Service</span>
+          </div>
+          <h3 class="text-sm font-semibold text-white mb-1">Cross-Tenant Identity Correlation</h3>
+          <p class="text-xs text-slate-400 mb-3">
+            Attacker attempts to link identical customer identities across Bank A and Bank B.
+          </p>
+        </div>
+        <button onclick="runAttackScenario('cross_tenant')" class="w-full py-1.5 px-3 rounded text-xs font-medium text-[#031927] bg-[#9DD1F1] hover:opacity-90 border border-[#9DD1F1] transition">
+          Run Cross-Tenant Correlation
+        </button>
+      </div>
+
+      <!-- 3. Unauthorized Decryption -->
+      <div class="panel rounded-lg p-4 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-300">Vector 03</span>
+            <span class="text-xs text-slate-400 font-mono">Privilege Escalation</span>
+          </div>
+          <h3 class="text-sm font-semibold text-white mb-1">Unauthorized Service Decryption</h3>
+          <p class="text-xs text-slate-400 mb-3">
+            Unprivileged reporting service requests plaintext decryption without role authorization.
+          </p>
+        </div>
+        <button onclick="runAttackScenario('unauth_decrypt')" class="w-full py-1.5 px-3 rounded text-xs font-medium text-[#031927] bg-[#9DD1F1] hover:opacity-90 border border-[#9DD1F1] transition">
+          Run Unauthorized Decryption
+        </button>
+      </div>
+
+      <!-- 4. Audit Log Forgery -->
+      <div class="panel rounded-lg p-4 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-300">Vector 04</span>
+            <span class="text-xs text-slate-400 font-mono">Audit Integrity</span>
+          </div>
+          <h3 class="text-sm font-semibold text-white mb-1">Audit Trail Record Forgery</h3>
+          <p class="text-xs text-slate-400 mb-3">
+            Malicious insider directly modifies past audit database records to conceal exfiltration.
+          </p>
+        </div>
+        <button onclick="runAttackScenario('audit_tamper')" class="w-full py-1.5 px-3 rounded text-xs font-medium text-[#031927] bg-[#9DD1F1] hover:opacity-90 border border-[#9DD1F1] transition">
+          Run Audit Forgery
+        </button>
+      </div>
+
+      <!-- 5. Plaintext Log Dump -->
+      <div class="panel rounded-lg p-4 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-300">Vector 05</span>
+            <span class="text-xs text-slate-400 font-mono">Telemetry Exfil</span>
+          </div>
+          <h3 class="text-sm font-semibold text-white mb-1">Application Log PII Scrape</h3>
+          <p class="text-xs text-slate-400 mb-3">
+            Attacker accesses centralized logging index to scrape unredacted customer identifiers.
+          </p>
+        </div>
+        <button onclick="runAttackScenario('plaintext_log')" class="w-full py-1.5 px-3 rounded text-xs font-medium text-[#031927] bg-[#9DD1F1] hover:opacity-90 border border-[#9DD1F1] transition">
+          Run Log PII Scrape
+        </button>
+      </div>
+
+      <!-- 6. Slow-Leak Cumulative Profiling -->
+      <div class="panel rounded-lg p-4 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-300">Vector 06</span>
+            <span class="text-xs text-slate-400 font-mono">Temporal Profiling</span>
+          </div>
+          <h3 class="text-sm font-semibold text-white mb-1">Multi-Request Cumulative Profiling</h3>
+          <p class="text-xs text-slate-400 mb-3">
+            Attacker requests single fields sequentially to bypass single-request thresholds.
+          </p>
+        </div>
+        <button onclick="runAttackScenario('cumulative')" class="w-full py-1.5 px-3 rounded text-xs font-medium text-[#031927] bg-[#9DD1F1] hover:opacity-90 border border-[#9DD1F1] transition">
+          Run Cumulative Profiling
+        </button>
+      </div>
+
+      <!-- 7. External Data Exfiltration -->
+      <div class="panel rounded-lg p-4 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-300">Vector 07</span>
+            <span class="text-xs text-slate-400 font-mono">Policy</span>
+          </div>
+          <h3 class="text-sm font-semibold text-white mb-1">External Data Exfiltration</h3>
+          <p class="text-xs text-slate-400 mb-3">
+            Attacker tries to send sensitive records to an unapproved outside service.
+          </p>
+        </div>
+        <button onclick="runAttackScenario('exfiltration')" class="w-full py-1.5 px-3 rounded text-xs font-medium text-[#031927] bg-[#9DD1F1] hover:opacity-90 border border-[#9DD1F1] transition">
+          Run Exfiltration
+        </button>
+      </div>
+
+      <!-- 8. Detector Evasion -->
+      <div class="panel rounded-lg p-4 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-300">Vector 08</span>
+            <span class="text-xs text-slate-400 font-mono">Known Limit</span>
+          </div>
+          <h3 class="text-sm font-semibold text-white mb-1">Detector Evasion</h3>
+          <p class="text-xs text-slate-400 mb-3">
+            Attacker disguises values so the detector misses them. Some get through.
+          </p>
+        </div>
+        <button onclick="runAttackScenario('evasion')" class="w-full py-1.5 px-3 rounded text-xs font-medium text-[#031927] bg-[#9DD1F1] hover:opacity-90 border border-[#9DD1F1] transition">
+          Run Detector Evasion
+        </button>
+      </div>
+    </div>
+
+    <!-- Attack Result Box -->
+    <div id="attack-result-box" class="hidden mt-6 panel rounded-lg p-5 scroll-mt-20">
+      <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-700">
+        <h3 id="attack-res-title" tabindex="-1" aria-describedby="attack-res-badge" class="text-sm font-semibold text-white outline-none"></h3>
+        <span id="attack-res-badge" class="px-2.5 py-0.5 rounded text-xs font-mono font-bold"></span>
+      </div>
+
+      <!-- Desktop-only execution timeline, filled by runAttackTimeline() -->
+      <ol id="attack-stages" aria-live="polite" class="hidden space-y-3 mb-4 p-3 rounded panel-subtle"></ol>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs font-mono mb-3">
+        <div class="p-3 rounded panel-subtle text-slate-300">
+          <span class="font-semibold block mb-1 text-rose-400">Baseline DLP Outcome:</span>
+          <p id="attack-res-baseline" class="leading-relaxed"></p>
+        </div>
+        <div class="p-3 rounded panel-subtle text-slate-300">
+          <span class="font-semibold block mb-1 text-emerald-400">EBCP-Guard Outcome:</span>
+          <p id="attack-res-ebcp" class="leading-relaxed"></p>
+        </div>
+      </div>
+
+      <div class="p-3 rounded panel-subtle text-xs text-slate-300">
+        <span class="font-semibold text-slate-200 block mb-0.5">Verification Analysis:</span>
+        <p id="attack-res-exp" class="leading-relaxed text-slate-400"></p>
+      </div>
+    </div>
+  </main>
+
+
+  <!-- ============================================================== -->
+  <!-- TAB 3: SYSTEM SPECIFICATIONS -->
+  <!-- ============================================================== -->
+  <main id="tab-architecture" class="hidden flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+    <div class="pb-3 border-b border-slate-700">
+      <h1 class="text-lg font-semibold text-white">System Specifications & Formal Definitions</h1>
+      <p class="text-xs text-slate-400 mt-0.5">Architectural formulas, cryptographic bounds, and policy matrix rules.</p>
+    </div>
+
+    <!-- Math Specs -->
+    <div class="panel rounded-lg p-5">
+      <h2 class="text-sm font-semibold text-white mb-2">1. Cumulative Exposure Risk Function</h2>
+      <p class="text-xs text-slate-400 mb-3 leading-relaxed">
+        Total risk R(t) at timestamp t is computed as a weighted sum over four normalized dimensions:
+      </p>
+
+      <div class="p-3 rounded panel-subtle font-mono text-sky-400 text-xs text-center mb-3">
+        R(t) = α · S(t) + β · C(t) + γ · L(t) + δ · D(t)
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs font-mono">
+        <div class="p-2.5 rounded panel-subtle">
+          <span class="text-slate-300 block font-semibold">α · S(t) (α = 0.35)</span>
+          <span class="text-slate-400 text-[11px] mt-0.5 block">Payload sensitivity score from classes S0 (0.0) through S4 (1.0).</span>
+        </div>
+        <div class="p-2.5 rounded panel-subtle">
+          <span class="text-slate-300 block font-semibold">β · C(t) (β = 0.30)</span>
+          <span class="text-slate-400 text-[11px] mt-0.5 block">Cumulative historical exposure with logistic saturation: C(t) = 1 - e^(-λ Σ w_i).</span>
+        </div>
+        <div class="p-2.5 rounded panel-subtle">
+          <span class="text-slate-300 block font-semibold">γ · L(t) (γ = 0.20)</span>
+          <span class="text-slate-400 text-[11px] mt-0.5 block">Graph connectivity score linking customer identifiers to external entities.</span>
+        </div>
+        <div class="p-2.5 rounded panel-subtle">
+          <span class="text-slate-300 block font-semibold">δ · D(t) (δ = 0.15)</span>
+          <span class="text-slate-400 text-[11px] mt-0.5 block">Destination risk score (Core Banking = 0.0, Blacklisted Partner = 1.0).</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cryptographic Hierarchy -->
+    <div class="panel rounded-lg p-5">
+      <h2 class="text-sm font-semibold text-white mb-2">2. Key Management Hierarchy (HKDF-SHA-256)</h2>
+      <div class="panel-subtle rounded p-3 font-mono text-xs text-slate-300 overflow-x-auto">
+<pre>
+Master Key (256-bit Hardware Key Storage)
+   │
+   ├── HKDF-Expand(MasterKey, "tenant:{tenant_id}") ───────► Tenant Key
+   │                                                             │
+   │                                                             ├── HKDF-Expand(TenantKey, "purpose:{purpose}") ──► Purpose Key
+   │                                                             │                                                        │
+   │                                                             │                                                        └── HKDF-Expand(PurposeKey, "epoch:{epoch_id}") ──► HMAC Token Key
+   │                                                             └── HKDF-Expand(TenantKey, "aes_encryption") ────► AES-256-GCM Key
+   └── HKDF-Expand(MasterKey, "audit_integrity") ──────────► Audit Trail Hash Key
+</pre>
+      </div>
+    </div>
+  </main>
+
+
+  <!-- ============================================================== -->
+  <!-- REVEAL, LOGS, EVALUATION (components in shared.js) -->
+  <!-- ============================================================== -->
+  <main id="tab-reveal" class="hidden s-ink flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div class="mb-5 pb-3 border-b border-slate-700">
+      <h1 class="text-lg font-semibold text-white">Reveal</h1>
+      <p class="text-xs text-slate-400 mt-0.5">The right service can get a value back. Try it three ways: no key, a key without decrypt rights, then a key with them.</p>
+    </div>
+    <div id="reveal-mount"></div>
+  </main>
+
+  <main id="tab-logs" class="hidden s-ink flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div class="mb-5 pb-3 border-b border-slate-700">
+      <h1 class="text-lg font-semibold text-white">Logs</h1>
+      <p class="text-xs text-slate-400 mt-0.5">The audit log records data types and decisions, never the values. Each row's hash includes the hash of the row before it.</p>
+    </div>
+    <div id="feed-mount"></div>
+  </main>
+
+  <main id="tab-evaluation" class="hidden s-ink flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div class="mb-5 pb-3 border-b border-slate-700">
+      <h1 class="text-lg font-semibold text-white">Evaluation</h1>
+    </div>
+    <div id="eval-mount"></div>
+  </main>
+
+  <!-- ============================================================== -->
+  <!-- JAVASCRIPT LOGIC -->
+  <!-- ============================================================== -->
+  <script src="/static/shared.js"></script>
+  <script>
+    const NAV_ACTIVE = "px-3 py-1.5 rounded text-xs font-medium transition bg-[#BA1200] text-[#C8E0F4] border border-[#BA1200]";
+    const NAV_IDLE = "px-3 py-1.5 rounded text-xs font-medium transition text-slate-400 hover:text-slate-200 hover:border-[#508AA8] border border-transparent";
+    const SUB_ACTIVE = "pb-2 text-sky-400 border-b-2 border-[#BA1200]";
+    const SUB_IDLE = "pb-2 text-slate-400 hover:text-slate-200 border-b-2 border-transparent";
+
+    function markCurrent(btn, isCurrent, value) {
+      if (isCurrent) btn.setAttribute('aria-current', value);
+      else btn.removeAttribute('aria-current');
+    }
+
+    function switchTab(tab) {
+      ['gateway', 'hacker', 'reveal', 'logs', 'evaluation', 'architecture'].forEach(t => {
+        const btn = document.getElementById(`nav-btn-${t}`);
+        const panel = document.getElementById(`tab-${t}`);
+        panel.classList.toggle('hidden', t !== tab);
+        panel.classList.toggle('tab-in', t === tab);
+        btn.className = t === tab ? NAV_ACTIVE : NAV_IDLE;
+        markCurrent(btn, t === tab, 'page');
+      });
+      if (tab === 'logs') feed.refresh();
+      if (tab === 'evaluation' && !evaluationLoaded) {
+        evaluationLoaded = true;
+        mountEvaluation(document.getElementById('eval-mount'));
+      }
+    }
+
+    const reveal = mountReveal(document.getElementById('reveal-mount'));
+    const feed = mountFeed(document.getElementById('feed-mount'), { filter: true });
+    let evaluationLoaded = false;
+
+    function switchExpTab(sub) {
+      ['nlp', 'crypto', 'risk', 'audit'].forEach(t => {
+        const btn = document.getElementById(`exp-btn-${t}`);
+        document.getElementById(`exp-view-${t}`).classList.toggle('hidden', t !== sub);
+        btn.className = t === sub ? SUB_ACTIVE : SUB_IDLE;
+        markCurrent(btn, t === sub, 'true');
+      });
+    }
+
+    function loadSample(type) {
+      if (!document.getElementById('view-loading').classList.contains('hidden')) return;
+      if (document.getElementById('view-form').classList.contains('hidden')) resetToForm();
+      if (type === 'payment') {
+        document.getElementById('input-name').value = "Rohan Gupta";
+        document.getElementById('input-email').value = "rohan.gupta@example.in";
+        document.getElementById('input-phone').value = "+919876543210";
+        document.getElementById('input-pan').value = "ABCPE1234F";
+        document.getElementById('input-account').value = "123456789012";
+        document.getElementById('input-ifsc').value = "HDFC0001234";
+        document.getElementById('input-aadhaar').value = "4567 8901 2345";
+        document.getElementById('input-amount').value = "75000";
+        document.getElementById('select-endpoint').value = "/api/v1/payments";
+        document.getElementById('select-destination').value = "internal_payment";
+      } else if (type === 'marketing') {
+        document.getElementById('input-name').value = "Priya Sharma";
+        document.getElementById('input-email').value = "priya.sharma@example.com";
+        document.getElementById('input-phone').value = "+919811223344";
+        document.getElementById('input-pan').value = "ABCPS1234F";
+        document.getElementById('input-account').value = "987654321098";
+        document.getElementById('input-ifsc').value = "ICIC0002345";
+        document.getElementById('input-aadhaar').value = "";
+        document.getElementById('input-amount').value = "2500";
+        document.getElementById('select-endpoint').value = "/api/v1/customer/profile";
+        document.getElementById('select-destination').value = "marketing_crm";
+      } else if (type === 'log') {
+        document.getElementById('input-name').value = "Vikram Adani";
+        document.getElementById('input-email').value = "vikram.adani@example.in";
+        document.getElementById('input-phone').value = "+919876500000";
+        document.getElementById('input-pan').value = "ABCDE1234F";
+        document.getElementById('input-account').value = "554433221100";
+        document.getElementById('input-ifsc').value = "SBIN0001111";
+        document.getElementById('input-aadhaar').value = "";
+        document.getElementById('input-amount').value = "100";
+        document.getElementById('select-endpoint').value = "/api/v1/auth/logs";
+        document.getElementById('select-destination').value = "application_logs";
+      } else if (type === 'blacklisted') {
+        document.getElementById('input-name').value = "Ananya Iyer";
+        document.getElementById('input-email').value = "ananya.iyer@exfil-test.com";
+        document.getElementById('input-phone').value = "+919988776655";
+        document.getElementById('input-pan').value = "ABCPA5678K";
+        document.getElementById('input-account').value = "998877665544";
+        document.getElementById('input-ifsc').value = "KKBK0001234";
+        document.getElementById('input-aadhaar').value = "9988 7766 5544";
+        document.getElementById('input-amount').value = "500000";
+        document.getElementById('select-endpoint').value = "/api/v1/analytics/events";
+        document.getElementById('select-destination').value = "untrusted_external";
+      }
+      updateJsonPreview();
+    }
+
+    function getConstructedPayload() {
+      const p = {
+        customer_name: document.getElementById('input-name').value,
+        email: document.getElementById('input-email').value,
+        phone: document.getElementById('input-phone').value,
+        pan: document.getElementById('input-pan').value.toUpperCase(),
+        account_number: document.getElementById('input-account').value,
+        ifsc_code: document.getElementById('input-ifsc').value.toUpperCase(),
+        amount: parseFloat(document.getElementById('input-amount').value || 0),
+      };
+      const aadhaar = document.getElementById('input-aadhaar').value.trim();
+      if (aadhaar) p.aadhaar = aadhaar;
+
+      return {
+        endpoint: document.getElementById('select-endpoint').value,
+        http_method: "POST",
+        destination_service: document.getElementById('select-destination').value,
+        tenant_id: DEMO_TENANT,
+        // Only the internal payment destination is declared as payment processing, which the policy encrypts.
+        ...(document.getElementById('select-destination').value === 'internal_payment'
+          ? { processing_purpose_hint: 'PAYMENT_PROCESSING' } : {}),
+        payload: p
+      };
+    }
+
+    function updateJsonPreview() {
+      const data = getConstructedPayload();
+      document.getElementById('json-preview-text').textContent = JSON.stringify(data, null, 2);
+    }
+
+    updateJsonPreview();
+
+    async function refreshGatewayStatus() {
+      const dot = document.getElementById('gateway-dot');
+      const label = document.getElementById('gateway-status');
+      const host = location.host;
+      let text = `Gateway Unreachable: ${host}`;
+      let color = 'bg-rose-500';
+      try {
+        const res = await fetch('/api/v1/health');
+        if (res.ok) {
+          const health = await res.json();
+          if (health.status !== 'healthy') {
+            text = `Gateway Degraded: ${host}`;
+            color = 'bg-amber-500';
+          } else if (!health.models_loaded) {
+            text = `Gateway Online, Some Models Unavailable: ${host}`;
+            color = 'bg-amber-500';
+          } else {
+            text = `Gateway Online: ${host}`;
+            color = 'bg-emerald-500';
+          }
+        }
+      } catch (err) {
+        console.error("Health check failed:", err);
+      }
+      label.textContent = text;
+      dot.className = `w-1.5 h-1.5 rounded-full ${color}`;
+    }
+
+    refreshGatewayStatus();
+
+    function showView(view, focusId) {
+      ['view-form', 'view-loading', 'view-error', 'view-results'].forEach(v => {
+        document.getElementById(v).classList.toggle('hidden', v !== view);
+      });
+      document.getElementById(focusId).focus();
+    }
+
+    function resetToForm() {
+      showView('view-form', 'btn-inspect');
+    }
+
+    function setStep(stepNumber, label, colorClass) {
+      const status = document.querySelector(`#pipe-step-${stepNumber} .pipe-status`);
+      status.textContent = label;
+      status.className = `pipe-status ${colorClass}`;
+    }
+
+    function showInspectionError(message) {
+      document.getElementById('error-message').textContent = message;
+      showView('view-error', 'error-title');
+      refreshGatewayStatus();
+    }
+
+    async function startInspection() {
+      const requestData = getConstructedPayload();
+
+      showView('view-loading', 'loading-title');
+      for (let i = 1; i <= 7; i++) setStep(i, 'Processing', 'text-sky-400 font-medium');
+
+      let analyze, protect;
+      try {
+        const [aRes, pRes] = await Promise.all([
+          postJson('/api/v1/analyze', requestData),
+          postJson('/api/v1/protect', requestData)
+        ]);
+        const failed = !aRes.ok ? aRes : (!pRes.ok ? pRes : null);
+        if (failed) {
+          showInspectionError(failed.status >= 500
+            ? `The gateway hit an internal error (HTTP ${failed.status}). Check the server logs and try again.`
+            : `The gateway rejected this request (HTTP ${failed.status}). Check the form values and try again.`);
+          return;
+        }
+        [analyze, protect] = await Promise.all([aRes.json(), pRes.json()]);
+      } catch (err) {
+        console.error("API Error:", err);
+        showInspectionError("Unable to reach the gateway. Check that the server is running and try again.");
+        return;
+      }
+
+      // The stages have all run by now; this only paces the reveal.
+      for (let i = 1; i <= 7; i++) {
+        setStep(i, 'Complete', 'text-emerald-400 font-medium');
+        await new Promise(r => setTimeout(r, 120));
+      }
+
+      renderResults(requestData, analyze, protect);
+      const sealed = pickSealed(protect.entity_decisions);
+      if (sealed) reveal.setSealed(sealed);
+      showView('view-results', 'result-hero-title');
+    }
+
+    const ACTIONS = {
+      ALLOW: {
+        tone: 'bg-slate-800 text-slate-300 border border-slate-700',
+        title: "No Protection Required",
+        desc: "Policy allowed this request without modifying the payload.",
+        egress: "Unmodified Egress Payload (Downstream Transmission)",
+      },
+      MASK: {
+        tone: 'bg-amber-950 text-amber-400 border border-amber-800',
+        title: "Format-Preserving Log Redaction Applied",
+        desc: "Masking is the strictest action applied to this request. Masked values keep operational prefixes for debugging; other fields may pass through.",
+        egress: "Sanitized Egress Payload (Downstream Transmission)",
+        algo: 'Format-Preserving Masking',
+        reason: 'Redacts identifying characters. Masked values cannot be restored from the output.',
+      },
+      TOKENIZE: {
+        tone: 'bg-sky-950 text-sky-400 border border-sky-800',
+        title: "Purpose-Bound HMAC-SHA-256 Pseudonymization Applied",
+        desc: "Tokenization is the strictest action applied to this request. Tokens are epoch-rotated, correlation-resistant pseudonyms; other fields may be masked.",
+        egress: "Sanitized Egress Payload (Downstream Transmission)",
+        algo: 'HMAC-SHA-256 (Purpose-Bound Tokens)',
+        reason: 'Guarantees that tokens cannot be reversed or correlated across tenants by an adversary.',
+      },
+      ENCRYPT: {
+        tone: 'bg-emerald-950 text-emerald-400 border border-emerald-800',
+        title: "Authenticated Reversible AES-256-GCM Applied",
+        desc: "Encryption is the strictest action applied to this request. Encrypted values use a fresh 96-bit nonce and only authorized service roles can decrypt them; other fields may be tokenized or masked.",
+        egress: "Sanitized Egress Payload (Downstream Transmission)",
+        algo: 'AES-256-GCM (Authenticated Encryption)',
+        reason: 'Permits reversible decryption by authorized internal services via authenticated associated data (AAD).',
+      },
+      BLOCK: {
+        tone: 'bg-rose-950 text-[#C8E0F4] border border-rose-800',
+        title: "Traffic Blocked: Policy Violation or Exposure Limit",
+        desc: "Request rejected by policy. No payload data was returned.",
+        egress: "Withheld Payload (Not Transmitted)",
+      },
+      QUARANTINE: {
+        tone: 'bg-rose-950 text-[#C8E0F4] border border-rose-800',
+        title: "Traffic Quarantined: Policy Violation or Exposure Limit",
+        desc: "Request held by policy for manual review. No payload data was returned.",
+        egress: "Withheld Payload (Not Transmitted)",
+      },
+    };
+
+    function egressBadge(action, raw, protectedPayload) {
+      if (action === 'ALLOW') return ["Not Modified", 'text-slate-300 bg-slate-800 border-slate-700'];
+      if (action === 'BLOCK' || action === 'QUARANTINE') return ["Withheld", 'text-[#C8E0F4] bg-rose-950 border-rose-900'];
+      const unchanged = Object.keys(raw).filter(k => typeof raw[k] === 'string' && raw[k] === protectedPayload[k]);
+      return unchanged.length
+        ? [`Partly Protected: ${unchanged.join(', ')} unchanged`, 'text-amber-400 bg-amber-950/60 border-amber-900/60']
+        : ["Protected", 'text-emerald-400 bg-emerald-950/60 border-emerald-900/60'];
+    }
+
+    function renderResults(reqData, analyze, protect) {
+      const action = protect.protection_decision;
+      const def = ACTIONS[action];
+
+      const badge = document.getElementById('result-action-badge');
+      badge.className = `px-2.5 py-0.5 rounded text-xs font-mono font-bold ${def.tone}`;
+      badge.textContent = `ACTION: ${action}`;
+      document.getElementById('result-hero-title').textContent = def.title;
+      document.getElementById('result-hero-desc').textContent = def.desc;
+
+      document.getElementById('result-original-payload').textContent = JSON.stringify(reqData.payload, null, 2);
+      document.getElementById('result-protected-payload').textContent = JSON.stringify(protect.protected_payload, null, 2);
+      document.getElementById('result-protected-title').textContent = def.egress;
+      const [egressText, egressTone] = egressBadge(action, reqData.payload, protect.protected_payload);
+      const egress = document.getElementById('result-protected-badge');
+      egress.textContent = egressText;
+      egress.className = `text-xs font-mono px-2 py-0.5 rounded border ${egressTone}`;
+
+      document.getElementById('exp-sens-class').textContent = analyze.sensitivity_class;
+      document.getElementById('exp-sens-conf').textContent = (analyze.sensitivity_confidence * 100).toFixed(1) + "%";
+      document.getElementById('exp-purpose').textContent = analyze.purpose;
+
+      const entList = document.getElementById('exp-entities-list');
+      entList.innerHTML = '';
+      const entities = analyze.detected_entities;
+      if (entities.length > 0) {
+        entities.forEach(e => {
+          const div = document.createElement('div');
+          div.className = "p-2 rounded panel-subtle flex justify-between items-center";
+          div.innerHTML = `<span class="text-sky-300 font-semibold">${e.entity_type}</span> <span class="text-slate-400">Class: ${e.sensitivity_class} | Confidence: ${(e.confidence*100).toFixed(0)}% | Verified: ${e.is_validated ? 'True' : 'Regex'}</span>`;
+          entList.appendChild(div);
+        });
+      } else {
+        entList.innerHTML = '<span class="text-slate-400">No sensitive entities detected.</span>';
+      }
+
+      switchExpTab('nlp');
+      document.getElementById('exp-btn-crypto').hidden = !def.algo;
+      document.getElementById('exp-crypto-type').textContent = def.algo || '';
+      document.getElementById('exp-crypto-reason').textContent = def.reason || '';
+
+      const score = analyze.exposure_score;
+      document.getElementById('exp-math-s').textContent = score.sensitivity_score.toFixed(2);
+      document.getElementById('exp-math-c').textContent = score.cumulative_score.toFixed(2);
+      document.getElementById('exp-math-l').textContent = score.linkability_score.toFixed(2);
+      document.getElementById('exp-math-d').textContent = score.destination_trust_score.toFixed(2);
+      document.getElementById('exp-math-total').textContent = score.total_risk_score.toFixed(3);
+
+      document.getElementById('exp-audit-id').textContent = protect.audit_event_id;
+      document.getElementById('exp-audit-hash').textContent = protect.audit_event_hash;
+    }
+
+    const ATTACK_BADGE = "px-2.5 py-0.5 rounded text-xs font-mono font-bold";
+    const attackName = (scenario) => scenario.toUpperCase().replaceAll('_', ' ');
+
+    function showAttackRunning(name) {
+      document.getElementById('attack-result-box').classList.remove('hidden');
+      document.getElementById('attack-res-title').textContent = `Running Scenario: ${name}…`;
+      const badge = document.getElementById('attack-res-badge');
+      badge.textContent = "RUNNING";
+      badge.className = `${ATTACK_BADGE} bg-slate-800 text-slate-300`;
+      document.getElementById('attack-res-baseline').textContent = "";
+      document.getElementById('attack-res-ebcp').textContent = "";
+      document.getElementById('attack-res-exp').textContent = "";
+    }
+
+    function showAttackResult(name, data) {
+      document.getElementById('attack-res-title').textContent = `Scenario Vector: ${name}`;
+      const badge = document.getElementById('attack-res-badge');
+      badge.textContent = data.result;
+      badge.className = data.result === 'PROTECTED'
+        ? `${ATTACK_BADGE} bg-emerald-950 text-emerald-400 border border-emerald-800`
+        : `${ATTACK_BADGE} bg-amber-950 text-amber-400 border border-amber-800`;
+      document.getElementById('attack-res-baseline').textContent = data.baseline_outcome;
+      document.getElementById('attack-res-ebcp').textContent = data.ebcp_guard_outcome;
+      document.getElementById('attack-res-exp').textContent = data.explanation;
+    }
+
+    function showAttackFailure(name, err) {
+      console.error("Attack verification failed:", err);
+      document.getElementById('attack-res-title').textContent = `Scenario Failed: ${name}`;
+      const badge = document.getElementById('attack-res-badge');
+      badge.textContent = "FAILED";
+      badge.className = `${ATTACK_BADGE} bg-rose-950 text-[#C8E0F4] border border-rose-800`;
+      document.getElementById('attack-res-baseline').textContent = "Not available.";
+      document.getElementById('attack-res-ebcp').textContent = "Not available.";
+      document.getElementById('attack-res-exp').textContent = "Unable to run this scenario. Check that the server is running and try again.";
+      refreshGatewayStatus();
+    }
+
+    // Desktop = wide viewport with a mouse. Phones, tablets and narrow windows keep the immediate flow.
+    const isDesktopAttackView = () =>
+      window.matchMedia('(min-width: 768px) and (hover: hover) and (pointer: fine)').matches;
+
+    let attackRunning = false; // one attack at a time, on every device
+
+    async function runAttackScenario(scenario) {
+      if (attackRunning) return;
+      if (isDesktopAttackView()) return runAttackTimeline(scenario);
+
+      attackRunning = true;
+      document.getElementById('attack-stages').classList.add('hidden');
+      const name = attackName(scenario);
+      showAttackRunning(name);
+
+      try {
+        const res = await postJson('/api/v1/simulate-attack', { scenario: scenario, tenant_id: "demo_bank" });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        showAttackResult(name, await res.json());
+      } catch (err) {
+        showAttackFailure(name, err);
+      } finally {
+        attackRunning = false;
+      }
+
+      document.getElementById('attack-result-box').scrollIntoView();
+      document.getElementById('attack-res-title').focus({ preventScroll: true });
+    }
+
+    // ---- Desktop demonstration timeline ----
+    // Every stage waits for its real event from /simulate-attack/stream, then stays on screen
+    // for at least `ms`. The backend finishes in milliseconds; `ms` paces the display only.
+    const ATTACK_STAGES = [
+      { key: 'attack_initiated', name: 'Attack Initiated', ms: 800 },
+      { key: 'target_analysis', name: 'Target Analysis', ms: 1500 },
+      { key: 'attack_execution', name: 'Attack Execution', ms: 2000 },
+      { key: 'security_verification', name: 'Security Verification', ms: 1500 },
+      { key: 'final_result', name: 'Final Result', ms: 800 },
+    ];
+
+    const STAGE_STATES = {
+      pending: { icon: '○', color: 'text-slate-500', label: 'Pending' },
+      running: { icon: '', color: 'text-sky-400', label: 'Running' },
+      done: { icon: '✓', color: 'text-emerald-400', label: 'Complete' },
+      warn: { icon: '!', color: 'text-amber-400', label: 'Complete' },
+      failed: { icon: '✕', color: 'text-rose-400', label: 'Failed' },
+      skipped: { icon: '–', color: 'text-slate-500', label: 'Not run' },
+    };
+
+    function renderAttackStages() {
+      const list = document.getElementById('attack-stages');
+      list.replaceChildren(...ATTACK_STAGES.map((stage) => {
+        const li = document.createElement('li');
+        li.className = 'text-xs';
+        li.innerHTML = `
+          <div class="flex items-center gap-2">
+            <span data-part="icon" aria-hidden="true" class="w-4 flex justify-center font-bold"></span>
+            <span data-part="name" class="font-semibold text-slate-200"></span>
+            <span data-part="state" class="ml-auto font-mono"></span>
+          </div>
+          <p data-part="message" class="ml-6 mt-0.5 text-slate-400 min-h-4"></p>
+          <div class="ml-6 mt-1 h-1 rounded bg-slate-800 overflow-hidden">
+            <div data-part="bar" class="stage-bar h-full bg-sky-500" style="width:0"></div>
+          </div>`;
+        li.querySelector('[data-part="name"]').textContent = stage.name;
+        return li;
+      }));
+      list.classList.remove('hidden');
+      ATTACK_STAGES.forEach((_, i) => setAttackStage(i, 'pending'));
+    }
+
+    function setAttackStage(i, state, message) {
+      const row = document.getElementById('attack-stages').children[i];
+      const part = (name) => row.querySelector(`[data-part="${name}"]`);
+      const { icon, color, label } = STAGE_STATES[state];
+      part('icon').className = `w-4 flex justify-center font-bold ${color}`;
+      part('icon').innerHTML = state === 'running' ? '<span class="stage-spinner"></span>' : icon;
+      part('state').className = `ml-auto font-mono ${color}`;
+      part('state').textContent = label;
+      if (message !== undefined) part('message').textContent = message;
+
+      const bar = part('bar');
+      if (state === 'running') {
+        // Stops short of full: only a completed stage shows 100%.
+        void bar.offsetWidth;
+        bar.style.transition = `width ${ATTACK_STAGES[i].ms}ms linear`;
+        bar.style.width = '95%';
+      } else if (state !== 'pending') {
+        bar.style.transition = 'none';
+        bar.style.width = state === 'skipped' ? '0' : '100%';
+        bar.className = `stage-bar h-full ${{ done: 'bg-emerald-500', warn: 'bg-amber-500', failed: 'bg-rose-500' }[state] || ''}`;
+      }
+    }
+
+    function setAttackButtonsDisabled(disabled) {
+      document.querySelectorAll('button[onclick^="runAttackScenario"]').forEach((btn) => {
+        btn.disabled = disabled;
+        btn.classList.toggle('opacity-50', disabled);
+        btn.classList.toggle('cursor-not-allowed', disabled);
+      });
+    }
+
+    async function runAttackTimeline(scenario) {
+      attackRunning = true;
+      setAttackButtonsDisabled(true);
+
+      const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+      const box = document.getElementById('attack-result-box');
+      const title = document.getElementById('attack-res-title');
+      const name = attackName(scenario);
+      let current = 0;
+
+      showAttackRunning(name);
+      renderAttackStages();
+      box.scrollIntoView();
+      title.focus({ preventScroll: true });
+
+      try {
+        setAttackStage(0, 'running', 'Sending request to the backend…');
+        const stageStart = [performance.now()];
+        const res = await postJson(
+          '/api/v1/simulate-attack/stream',
+          { scenario: scenario, tenant_id: "demo_bank" },
+          AbortSignal.timeout(30000) // a hung server must not lock the buttons forever
+        );
+        if (!res.ok) throw new Error(`Backend returned HTTP ${res.status}`);
+        const events = readAttackEvents(res);
+
+        for (current = 0; current < ATTACK_STAGES.length; current++) {
+          const stage = ATTACK_STAGES[current];
+          if (current > 0) {
+            stageStart[current] = performance.now();
+            setAttackStage(current, 'running', 'Waiting for the backend…');
+          }
+
+          const { value: event, done } = await events.next();
+          if (done) throw new Error('Backend stream ended before this stage');
+          if (event.stage === 'error') throw new Error(event.message);
+          if (event.stage !== stage.key) throw new Error('Backend reported an unexpected stage');
+          setAttackStage(current, 'running', `${event.message} (backend +${event.elapsed_ms} ms)`);
+
+          let data = null;
+          if (stage.key === 'final_result') {
+            data = event.result;
+            if (data?.scenario !== scenario || !['PROTECTED', 'PARTIAL', 'VULNERABLE'].includes(data.result)) {
+              throw new Error('Backend response did not match this scenario');
+            }
+            showAttackResult(name, data);
+            box.scrollIntoView({ block: 'nearest' });
+          }
+
+          await wait(stage.ms - (performance.now() - stageStart[current]));
+          setAttackStage(current, data && data.result !== 'PROTECTED' ? 'warn' : 'done');
+        }
+      } catch (err) {
+        const reason = err.name === 'TimeoutError' ? 'No backend response after 30 seconds' : err.message;
+        setAttackStage(current, 'failed', reason);
+        for (let i = current + 1; i < ATTACK_STAGES.length; i++) setAttackStage(i, 'skipped');
+        showAttackFailure(name, err);
+      } finally {
+        attackRunning = false;
+        setAttackButtonsDisabled(false);
+        title.focus({ preventScroll: true });
+      }
+    }
+  </script>
+</body>
+</html>

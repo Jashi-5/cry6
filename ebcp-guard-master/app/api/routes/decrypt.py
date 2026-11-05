@@ -68,16 +68,14 @@ async def decrypt(
         )
 
     # 2. Reversible decryption under scoped context
-    # Note: If entity_type and purpose are stored in metadata, retrieve or default
-    entity_type = "ACCOUNT_NUMBER"
-    purpose = "PAYMENT_PROCESSING"
+    entity_type = request.entity_type
 
     try:
         decrypted_text = decrypt_value(
             cipher_package_b64=request.ciphertext_b64,
             entity_type=entity_type,
             tenant_id=request.tenant_id,
-            purpose=purpose,
+            purpose=request.purpose.value,
             key_version=settings.key_version,
         )
     except Exception as exc:

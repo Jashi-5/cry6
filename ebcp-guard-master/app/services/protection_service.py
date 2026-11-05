@@ -92,6 +92,7 @@ def _apply_protection_to_payload(
             protected_val: str | None = None
             cipher_id: str | None = None
             token_id: str | None = None
+            ciphertext_b64: str | None = None
 
             if action == ProtectionAction.ALLOW:
                 protected_val = value  # No change
@@ -120,6 +121,7 @@ def _apply_protection_to_payload(
                     purpose=purpose,
                 )
                 cipher_id = pkg.cipher_id
+                ciphertext_b64 = pkg.cipher_package_b64
                 protected_val = f"[ENC:{pkg.cipher_id}:{pkg.cipher_package_b64[:16]}...]"
                 _replace_in_payload(protected_payload, value, f"[ENCRYPTED:{pkg.cipher_id}]")
 
@@ -130,6 +132,8 @@ def _apply_protection_to_payload(
                 protected_value=protected_val,
                 cipher_id=cipher_id,
                 token_id=token_id,
+                ciphertext_b64=ciphertext_b64,
+                purpose=purpose if ciphertext_b64 else None,
             ))
 
     return results
